@@ -1,4 +1,4 @@
-package repository
+package wallet
 
 import (
 	"errors"
@@ -15,8 +15,8 @@ var (
 
 // Wallet is the repository interface to fulfill to use the wallet aggregate
 //
-//counterfeiter:generate . Wallet
-type Wallet interface {
+//counterfeiter:generate . WalletRepository
+type WalletRepository interface {
 	GetAll() ([]ent.Wallet, error)
 	GetByID(id int) (ent.Wallet, error)
 	Add(wallet ent.Wallet) error

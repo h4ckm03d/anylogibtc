@@ -3,8 +3,8 @@ services:
   postgresql:
     image: postgres:15-alpine
     environment:
-      POSTGRES_PASSWORD: my-password
+      POSTGRES_PASSWORD: secret
       POSTGRES_USER: postgres
       POSTGRES_DB: anylogi
     ports:
-      - 5432:5439 # prevent conflict with local postgres server
+      - 5432:5432 # prevent conflict with local postgres server
