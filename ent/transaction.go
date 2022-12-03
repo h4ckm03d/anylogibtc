@@ -22,36 +22,50 @@ type Transaction struct {
 	Datetime time.Time `json:"datetime,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount decimal.Decimal `json:"amount,omitempty"`
-	// Sender holds the value of the "sender" field.
-	Sender int `json:"sender,omitempty"`
-	// Recipient holds the value of the "recipient" field.
-	Recipient int `json:"recipient,omitempty"`
+	// SenderID holds the value of the "sender_id" field.
+	SenderID int `json:"sender_id,omitempty"`
+	// RecipientID holds the value of the "recipient_id" field.
+	RecipientID int `json:"recipient_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TransactionQuery when eager-loading is set.
-	Edges               TransactionEdges `json:"edges"`
-	wallet_transactions *int
+	Edges TransactionEdges `json:"edges"`
 }
 
 // TransactionEdges holds the relations/edges for other nodes in the graph.
 type TransactionEdges struct {
-	// Wallet holds the value of the wallet edge.
-	Wallet *Wallet `json:"wallet,omitempty"`
+	// Sender holds the value of the sender edge.
+	Sender *Wallet `json:"sender,omitempty"`
+	// Recipient holds the value of the recipient edge.
+	Recipient *Wallet `json:"recipient,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
-// WalletOrErr returns the Wallet value or an error if the edge
+// SenderOrErr returns the Sender value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e TransactionEdges) WalletOrErr() (*Wallet, error) {
+func (e TransactionEdges) SenderOrErr() (*Wallet, error) {
 	if e.loadedTypes[0] {
-		if e.Wallet == nil {
+		if e.Sender == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: wallet.Label}
 		}
-		return e.Wallet, nil
+		return e.Sender, nil
 	}
-	return nil, &NotLoadedError{edge: "wallet"}
+	return nil, &NotLoadedError{edge: "sender"}
+}
+
+// RecipientOrErr returns the Recipient value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TransactionEdges) RecipientOrErr() (*Wallet, error) {
+	if e.loadedTypes[1] {
+		if e.Recipient == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: wallet.Label}
+		}
+		return e.Recipient, nil
+	}
+	return nil, &NotLoadedError{edge: "recipient"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -61,12 +75,10 @@ func (*Transaction) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case transaction.FieldAmount:
 			values[i] = new(decimal.Decimal)
-		case transaction.FieldID, transaction.FieldSender, transaction.FieldRecipient:
+		case transaction.FieldID, transaction.FieldSenderID, transaction.FieldRecipientID:
 			values[i] = new(sql.NullInt64)
 		case transaction.FieldDatetime:
 			values[i] = new(sql.NullTime)
-		case transaction.ForeignKeys[0]: // wallet_transactions
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Transaction", columns[i])
 		}
@@ -100,33 +112,31 @@ func (t *Transaction) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				t.Amount = *value
 			}
-		case transaction.FieldSender:
+		case transaction.FieldSenderID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sender", values[i])
+				return fmt.Errorf("unexpected type %T for field sender_id", values[i])
 			} else if value.Valid {
-				t.Sender = int(value.Int64)
+				t.SenderID = int(value.Int64)
 			}
-		case transaction.FieldRecipient:
+		case transaction.FieldRecipientID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field recipient", values[i])
+				return fmt.Errorf("unexpected type %T for field recipient_id", values[i])
 			} else if value.Valid {
-				t.Recipient = int(value.Int64)
-			}
-		case transaction.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field wallet_transactions", value)
-			} else if value.Valid {
-				t.wallet_transactions = new(int)
-				*t.wallet_transactions = int(value.Int64)
+				t.RecipientID = int(value.Int64)
 			}
 		}
 	}
 	return nil
 }
 
-// QueryWallet queries the "wallet" edge of the Transaction entity.
-func (t *Transaction) QueryWallet() *WalletQuery {
-	return (&TransactionClient{config: t.config}).QueryWallet(t)
+// QuerySender queries the "sender" edge of the Transaction entity.
+func (t *Transaction) QuerySender() *WalletQuery {
+	return (&TransactionClient{config: t.config}).QuerySender(t)
+}
+
+// QueryRecipient queries the "recipient" edge of the Transaction entity.
+func (t *Transaction) QueryRecipient() *WalletQuery {
+	return (&TransactionClient{config: t.config}).QueryRecipient(t)
 }
 
 // Update returns a builder for updating this Transaction.
@@ -158,11 +168,11 @@ func (t *Transaction) String() string {
 	builder.WriteString("amount=")
 	builder.WriteString(fmt.Sprintf("%v", t.Amount))
 	builder.WriteString(", ")
-	builder.WriteString("sender=")
-	builder.WriteString(fmt.Sprintf("%v", t.Sender))
+	builder.WriteString("sender_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.SenderID))
 	builder.WriteString(", ")
-	builder.WriteString("recipient=")
-	builder.WriteString(fmt.Sprintf("%v", t.Recipient))
+	builder.WriteString("recipient_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.RecipientID))
 	builder.WriteByte(')')
 	return builder.String()
 }

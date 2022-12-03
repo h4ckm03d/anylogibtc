@@ -96,17 +96,17 @@ func Amount(v decimal.Decimal) predicate.Transaction {
 	})
 }
 
-// Sender applies equality check predicate on the "sender" field. It's identical to SenderEQ.
-func Sender(v int) predicate.Transaction {
+// SenderID applies equality check predicate on the "sender_id" field. It's identical to SenderIDEQ.
+func SenderID(v int) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSender), v))
+		s.Where(sql.EQ(s.C(FieldSenderID), v))
 	})
 }
 
-// Recipient applies equality check predicate on the "recipient" field. It's identical to RecipientEQ.
-func Recipient(v int) predicate.Transaction {
+// RecipientID applies equality check predicate on the "recipient_id" field. It's identical to RecipientIDEQ.
+func RecipientID(v int) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldRecipient), v))
+		s.Where(sql.EQ(s.C(FieldRecipientID), v))
 	})
 }
 
@@ -238,153 +238,125 @@ func AmountLTE(v decimal.Decimal) predicate.Transaction {
 	})
 }
 
-// SenderEQ applies the EQ predicate on the "sender" field.
-func SenderEQ(v int) predicate.Transaction {
+// SenderIDEQ applies the EQ predicate on the "sender_id" field.
+func SenderIDEQ(v int) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSender), v))
+		s.Where(sql.EQ(s.C(FieldSenderID), v))
 	})
 }
 
-// SenderNEQ applies the NEQ predicate on the "sender" field.
-func SenderNEQ(v int) predicate.Transaction {
+// SenderIDNEQ applies the NEQ predicate on the "sender_id" field.
+func SenderIDNEQ(v int) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldSender), v))
+		s.Where(sql.NEQ(s.C(FieldSenderID), v))
 	})
 }
 
-// SenderIn applies the In predicate on the "sender" field.
-func SenderIn(vs ...int) predicate.Transaction {
+// SenderIDIn applies the In predicate on the "sender_id" field.
+func SenderIDIn(vs ...int) predicate.Transaction {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldSender), v...))
+		s.Where(sql.In(s.C(FieldSenderID), v...))
 	})
 }
 
-// SenderNotIn applies the NotIn predicate on the "sender" field.
-func SenderNotIn(vs ...int) predicate.Transaction {
+// SenderIDNotIn applies the NotIn predicate on the "sender_id" field.
+func SenderIDNotIn(vs ...int) predicate.Transaction {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldSender), v...))
+		s.Where(sql.NotIn(s.C(FieldSenderID), v...))
 	})
 }
 
-// SenderGT applies the GT predicate on the "sender" field.
-func SenderGT(v int) predicate.Transaction {
+// RecipientIDEQ applies the EQ predicate on the "recipient_id" field.
+func RecipientIDEQ(v int) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldSender), v))
+		s.Where(sql.EQ(s.C(FieldRecipientID), v))
 	})
 }
 
-// SenderGTE applies the GTE predicate on the "sender" field.
-func SenderGTE(v int) predicate.Transaction {
+// RecipientIDNEQ applies the NEQ predicate on the "recipient_id" field.
+func RecipientIDNEQ(v int) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldSender), v))
+		s.Where(sql.NEQ(s.C(FieldRecipientID), v))
 	})
 }
 
-// SenderLT applies the LT predicate on the "sender" field.
-func SenderLT(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldSender), v))
-	})
-}
-
-// SenderLTE applies the LTE predicate on the "sender" field.
-func SenderLTE(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldSender), v))
-	})
-}
-
-// RecipientEQ applies the EQ predicate on the "recipient" field.
-func RecipientEQ(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldRecipient), v))
-	})
-}
-
-// RecipientNEQ applies the NEQ predicate on the "recipient" field.
-func RecipientNEQ(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldRecipient), v))
-	})
-}
-
-// RecipientIn applies the In predicate on the "recipient" field.
-func RecipientIn(vs ...int) predicate.Transaction {
+// RecipientIDIn applies the In predicate on the "recipient_id" field.
+func RecipientIDIn(vs ...int) predicate.Transaction {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldRecipient), v...))
+		s.Where(sql.In(s.C(FieldRecipientID), v...))
 	})
 }
 
-// RecipientNotIn applies the NotIn predicate on the "recipient" field.
-func RecipientNotIn(vs ...int) predicate.Transaction {
+// RecipientIDNotIn applies the NotIn predicate on the "recipient_id" field.
+func RecipientIDNotIn(vs ...int) predicate.Transaction {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldRecipient), v...))
+		s.Where(sql.NotIn(s.C(FieldRecipientID), v...))
 	})
 }
 
-// RecipientGT applies the GT predicate on the "recipient" field.
-func RecipientGT(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldRecipient), v))
-	})
-}
-
-// RecipientGTE applies the GTE predicate on the "recipient" field.
-func RecipientGTE(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldRecipient), v))
-	})
-}
-
-// RecipientLT applies the LT predicate on the "recipient" field.
-func RecipientLT(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldRecipient), v))
-	})
-}
-
-// RecipientLTE applies the LTE predicate on the "recipient" field.
-func RecipientLTE(v int) predicate.Transaction {
-	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldRecipient), v))
-	})
-}
-
-// HasWallet applies the HasEdge predicate on the "wallet" edge.
-func HasWallet() predicate.Transaction {
+// HasSender applies the HasEdge predicate on the "sender" edge.
+func HasSender() predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(WalletTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, WalletTable, WalletColumn),
+			sqlgraph.To(SenderTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SenderTable, SenderColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasWalletWith applies the HasEdge predicate on the "wallet" edge with a given conditions (other predicates).
-func HasWalletWith(preds ...predicate.Wallet) predicate.Transaction {
+// HasSenderWith applies the HasEdge predicate on the "sender" edge with a given conditions (other predicates).
+func HasSenderWith(preds ...predicate.Wallet) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(WalletInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, WalletTable, WalletColumn),
+			sqlgraph.To(SenderInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SenderTable, SenderColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRecipient applies the HasEdge predicate on the "recipient" edge.
+func HasRecipient() predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(RecipientTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, RecipientTable, RecipientColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRecipientWith applies the HasEdge predicate on the "recipient" edge with a given conditions (other predicates).
+func HasRecipientWith(preds ...predicate.Wallet) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(RecipientInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, RecipientTable, RecipientColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

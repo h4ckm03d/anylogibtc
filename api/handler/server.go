@@ -34,7 +34,6 @@ func (s *EchoServer) SetupRoutes() {
 }
 
 func (s *EchoServer) Run() {
-
 	s.e.Logger.SetLevel(log.INFO)
 
 	s.SetupRoutes()

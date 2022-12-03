@@ -29,20 +29,31 @@ type Wallet struct {
 
 // WalletEdges holds the relations/edges for other nodes in the graph.
 type WalletEdges struct {
-	// Transactions holds the value of the transactions edge.
-	Transactions []*Transaction `json:"transactions,omitempty"`
+	// Senders holds the value of the senders edge.
+	Senders []*Transaction `json:"senders,omitempty"`
+	// Recipients holds the value of the recipients edge.
+	Recipients []*Transaction `json:"recipients,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
-// TransactionsOrErr returns the Transactions value or an error if the edge
+// SendersOrErr returns the Senders value or an error if the edge
 // was not loaded in eager-loading.
-func (e WalletEdges) TransactionsOrErr() ([]*Transaction, error) {
+func (e WalletEdges) SendersOrErr() ([]*Transaction, error) {
 	if e.loadedTypes[0] {
-		return e.Transactions, nil
+		return e.Senders, nil
 	}
-	return nil, &NotLoadedError{edge: "transactions"}
+	return nil, &NotLoadedError{edge: "senders"}
+}
+
+// RecipientsOrErr returns the Recipients value or an error if the edge
+// was not loaded in eager-loading.
+func (e WalletEdges) RecipientsOrErr() ([]*Transaction, error) {
+	if e.loadedTypes[1] {
+		return e.Recipients, nil
+	}
+	return nil, &NotLoadedError{edge: "recipients"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -100,9 +111,14 @@ func (w *Wallet) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// QueryTransactions queries the "transactions" edge of the Wallet entity.
-func (w *Wallet) QueryTransactions() *TransactionQuery {
-	return (&WalletClient{config: w.config}).QueryTransactions(w)
+// QuerySenders queries the "senders" edge of the Wallet entity.
+func (w *Wallet) QuerySenders() *TransactionQuery {
+	return (&WalletClient{config: w.config}).QuerySenders(w)
+}
+
+// QueryRecipients queries the "recipients" edge of the Wallet entity.
+func (w *Wallet) QueryRecipients() *TransactionQuery {
+	return (&WalletClient{config: w.config}).QueryRecipients(w)
 }
 
 // Update returns a builder for updating this Wallet.

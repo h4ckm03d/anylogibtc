@@ -27,8 +27,8 @@ func (Transaction) Fields() []ent.Field {
 				dialect.MySQL:    "decimal(6,2)",
 				dialect.Postgres: "numeric(6,2)",
 			}),
-		field.Int("sender"),
-		field.Int("recipient"),
+		field.Int("sender_id"),
+		field.Int("recipient_id"),
 	}
 }
 
@@ -38,11 +38,16 @@ func (Transaction) Edges() []ent.Edge {
 		// Create an inverse-edge called "owner" of type `User`
 		// and reference it to the "cars" edge (in User schema)
 		// explicitly using the `Ref` method.
-		edge.From("wallet", Wallet.Type).
-			Ref("transactions").
+		edge.From("sender", Wallet.Type).
+			Ref("senders").
 			// setting the edge to unique, ensure
 			// that a car can have only one owner.
-			Unique(),
+			Unique().Field("sender_id").Required(),
+		edge.From("recipient", Wallet.Type).
+			Ref("recipients").
+			// setting the edge to unique, ensure
+			// that a car can have only one owner.
+			Unique().Field("recipient_id").Required(),
 	}
 }
 

@@ -215,15 +215,31 @@ func (c *TransactionClient) GetX(ctx context.Context, id int) *Transaction {
 	return obj
 }
 
-// QueryWallet queries the wallet edge of a Transaction.
-func (c *TransactionClient) QueryWallet(t *Transaction) *WalletQuery {
+// QuerySender queries the sender edge of a Transaction.
+func (c *TransactionClient) QuerySender(t *Transaction) *WalletQuery {
 	query := &WalletQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(transaction.Table, transaction.FieldID, id),
 			sqlgraph.To(wallet.Table, wallet.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, transaction.WalletTable, transaction.WalletColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.SenderTable, transaction.SenderColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRecipient queries the recipient edge of a Transaction.
+func (c *TransactionClient) QueryRecipient(t *Transaction) *WalletQuery {
+	query := &WalletQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, id),
+			sqlgraph.To(wallet.Table, wallet.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.RecipientTable, transaction.RecipientColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -321,15 +337,31 @@ func (c *WalletClient) GetX(ctx context.Context, id int) *Wallet {
 	return obj
 }
 
-// QueryTransactions queries the transactions edge of a Wallet.
-func (c *WalletClient) QueryTransactions(w *Wallet) *TransactionQuery {
+// QuerySenders queries the senders edge of a Wallet.
+func (c *WalletClient) QuerySenders(w *Wallet) *TransactionQuery {
 	query := &TransactionQuery{config: c.config}
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := w.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(wallet.Table, wallet.FieldID, id),
 			sqlgraph.To(transaction.Table, transaction.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, wallet.TransactionsTable, wallet.TransactionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, wallet.SendersTable, wallet.SendersColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRecipients queries the recipients edge of a Wallet.
+func (c *WalletClient) QueryRecipients(w *Wallet) *TransactionQuery {
+	query := &TransactionQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(wallet.Table, wallet.FieldID, id),
+			sqlgraph.To(transaction.Table, transaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, wallet.RecipientsTable, wallet.RecipientsColumn),
 		)
 		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
 		return fromV, nil

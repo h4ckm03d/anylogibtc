@@ -1,10 +1,11 @@
 package handler_test
 
 import (
-	"anylogibtc/api/handler"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"anylogibtc/api/handler"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

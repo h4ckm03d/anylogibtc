@@ -19,13 +19,14 @@ import (
 // WalletQuery is the builder for querying Wallet entities.
 type WalletQuery struct {
 	config
-	limit            *int
-	offset           *int
-	unique           *bool
-	order            []OrderFunc
-	fields           []string
-	predicates       []predicate.Wallet
-	withTransactions *TransactionQuery
+	limit          *int
+	offset         *int
+	unique         *bool
+	order          []OrderFunc
+	fields         []string
+	predicates     []predicate.Wallet
+	withSenders    *TransactionQuery
+	withRecipients *TransactionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,8 +63,8 @@ func (wq *WalletQuery) Order(o ...OrderFunc) *WalletQuery {
 	return wq
 }
 
-// QueryTransactions chains the current query on the "transactions" edge.
-func (wq *WalletQuery) QueryTransactions() *TransactionQuery {
+// QuerySenders chains the current query on the "senders" edge.
+func (wq *WalletQuery) QuerySenders() *TransactionQuery {
 	query := &TransactionQuery{config: wq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := wq.prepareQuery(ctx); err != nil {
@@ -76,7 +77,29 @@ func (wq *WalletQuery) QueryTransactions() *TransactionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(wallet.Table, wallet.FieldID, selector),
 			sqlgraph.To(transaction.Table, transaction.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, wallet.TransactionsTable, wallet.TransactionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, wallet.SendersTable, wallet.SendersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRecipients chains the current query on the "recipients" edge.
+func (wq *WalletQuery) QueryRecipients() *TransactionQuery {
+	query := &TransactionQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(wallet.Table, wallet.FieldID, selector),
+			sqlgraph.To(transaction.Table, transaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, wallet.RecipientsTable, wallet.RecipientsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -260,12 +283,13 @@ func (wq *WalletQuery) Clone() *WalletQuery {
 		return nil
 	}
 	return &WalletQuery{
-		config:           wq.config,
-		limit:            wq.limit,
-		offset:           wq.offset,
-		order:            append([]OrderFunc{}, wq.order...),
-		predicates:       append([]predicate.Wallet{}, wq.predicates...),
-		withTransactions: wq.withTransactions.Clone(),
+		config:         wq.config,
+		limit:          wq.limit,
+		offset:         wq.offset,
+		order:          append([]OrderFunc{}, wq.order...),
+		predicates:     append([]predicate.Wallet{}, wq.predicates...),
+		withSenders:    wq.withSenders.Clone(),
+		withRecipients: wq.withRecipients.Clone(),
 		// clone intermediate query.
 		sql:    wq.sql.Clone(),
 		path:   wq.path,
@@ -273,14 +297,25 @@ func (wq *WalletQuery) Clone() *WalletQuery {
 	}
 }
 
-// WithTransactions tells the query-builder to eager-load the nodes that are connected to
-// the "transactions" edge. The optional arguments are used to configure the query builder of the edge.
-func (wq *WalletQuery) WithTransactions(opts ...func(*TransactionQuery)) *WalletQuery {
+// WithSenders tells the query-builder to eager-load the nodes that are connected to
+// the "senders" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WalletQuery) WithSenders(opts ...func(*TransactionQuery)) *WalletQuery {
 	query := &TransactionQuery{config: wq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	wq.withTransactions = query
+	wq.withSenders = query
+	return wq
+}
+
+// WithRecipients tells the query-builder to eager-load the nodes that are connected to
+// the "recipients" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WalletQuery) WithRecipients(opts ...func(*TransactionQuery)) *WalletQuery {
+	query := &TransactionQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withRecipients = query
 	return wq
 }
 
@@ -357,8 +392,9 @@ func (wq *WalletQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Walle
 	var (
 		nodes       = []*Wallet{}
 		_spec       = wq.querySpec()
-		loadedTypes = [1]bool{
-			wq.withTransactions != nil,
+		loadedTypes = [2]bool{
+			wq.withSenders != nil,
+			wq.withRecipients != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -379,17 +415,24 @@ func (wq *WalletQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Walle
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := wq.withTransactions; query != nil {
-		if err := wq.loadTransactions(ctx, query, nodes,
-			func(n *Wallet) { n.Edges.Transactions = []*Transaction{} },
-			func(n *Wallet, e *Transaction) { n.Edges.Transactions = append(n.Edges.Transactions, e) }); err != nil {
+	if query := wq.withSenders; query != nil {
+		if err := wq.loadSenders(ctx, query, nodes,
+			func(n *Wallet) { n.Edges.Senders = []*Transaction{} },
+			func(n *Wallet, e *Transaction) { n.Edges.Senders = append(n.Edges.Senders, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := wq.withRecipients; query != nil {
+		if err := wq.loadRecipients(ctx, query, nodes,
+			func(n *Wallet) { n.Edges.Recipients = []*Transaction{} },
+			func(n *Wallet, e *Transaction) { n.Edges.Recipients = append(n.Edges.Recipients, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (wq *WalletQuery) loadTransactions(ctx context.Context, query *TransactionQuery, nodes []*Wallet, init func(*Wallet), assign func(*Wallet, *Transaction)) error {
+func (wq *WalletQuery) loadSenders(ctx context.Context, query *TransactionQuery, nodes []*Wallet, init func(*Wallet), assign func(*Wallet, *Transaction)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Wallet)
 	for i := range nodes {
@@ -399,22 +442,45 @@ func (wq *WalletQuery) loadTransactions(ctx context.Context, query *TransactionQ
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
 	query.Where(predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.InValues(wallet.TransactionsColumn, fks...))
+		s.Where(sql.InValues(wallet.SendersColumn, fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.wallet_transactions
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "wallet_transactions" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.SenderID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "wallet_transactions" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "sender_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (wq *WalletQuery) loadRecipients(ctx context.Context, query *TransactionQuery, nodes []*Wallet, init func(*Wallet), assign func(*Wallet, *Transaction)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Wallet)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.Where(predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.InValues(wallet.RecipientsColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RecipientID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "recipient_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

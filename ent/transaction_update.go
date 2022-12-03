@@ -42,49 +42,26 @@ func (tu *TransactionUpdate) AddAmount(d decimal.Decimal) *TransactionUpdate {
 	return tu
 }
 
-// SetSender sets the "sender" field.
-func (tu *TransactionUpdate) SetSender(i int) *TransactionUpdate {
-	tu.mutation.ResetSender()
-	tu.mutation.SetSender(i)
+// SetSenderID sets the "sender_id" field.
+func (tu *TransactionUpdate) SetSenderID(i int) *TransactionUpdate {
+	tu.mutation.SetSenderID(i)
 	return tu
 }
 
-// AddSender adds i to the "sender" field.
-func (tu *TransactionUpdate) AddSender(i int) *TransactionUpdate {
-	tu.mutation.AddSender(i)
+// SetRecipientID sets the "recipient_id" field.
+func (tu *TransactionUpdate) SetRecipientID(i int) *TransactionUpdate {
+	tu.mutation.SetRecipientID(i)
 	return tu
 }
 
-// SetRecipient sets the "recipient" field.
-func (tu *TransactionUpdate) SetRecipient(i int) *TransactionUpdate {
-	tu.mutation.ResetRecipient()
-	tu.mutation.SetRecipient(i)
-	return tu
+// SetSender sets the "sender" edge to the Wallet entity.
+func (tu *TransactionUpdate) SetSender(w *Wallet) *TransactionUpdate {
+	return tu.SetSenderID(w.ID)
 }
 
-// AddRecipient adds i to the "recipient" field.
-func (tu *TransactionUpdate) AddRecipient(i int) *TransactionUpdate {
-	tu.mutation.AddRecipient(i)
-	return tu
-}
-
-// SetWalletID sets the "wallet" edge to the Wallet entity by ID.
-func (tu *TransactionUpdate) SetWalletID(id int) *TransactionUpdate {
-	tu.mutation.SetWalletID(id)
-	return tu
-}
-
-// SetNillableWalletID sets the "wallet" edge to the Wallet entity by ID if the given value is not nil.
-func (tu *TransactionUpdate) SetNillableWalletID(id *int) *TransactionUpdate {
-	if id != nil {
-		tu = tu.SetWalletID(*id)
-	}
-	return tu
-}
-
-// SetWallet sets the "wallet" edge to the Wallet entity.
-func (tu *TransactionUpdate) SetWallet(w *Wallet) *TransactionUpdate {
-	return tu.SetWalletID(w.ID)
+// SetRecipient sets the "recipient" edge to the Wallet entity.
+func (tu *TransactionUpdate) SetRecipient(w *Wallet) *TransactionUpdate {
+	return tu.SetRecipientID(w.ID)
 }
 
 // Mutation returns the TransactionMutation object of the builder.
@@ -92,9 +69,15 @@ func (tu *TransactionUpdate) Mutation() *TransactionMutation {
 	return tu.mutation
 }
 
-// ClearWallet clears the "wallet" edge to the Wallet entity.
-func (tu *TransactionUpdate) ClearWallet() *TransactionUpdate {
-	tu.mutation.ClearWallet()
+// ClearSender clears the "sender" edge to the Wallet entity.
+func (tu *TransactionUpdate) ClearSender() *TransactionUpdate {
+	tu.mutation.ClearSender()
+	return tu
+}
+
+// ClearRecipient clears the "recipient" edge to the Wallet entity.
+func (tu *TransactionUpdate) ClearRecipient() *TransactionUpdate {
+	tu.mutation.ClearRecipient()
 	return tu
 }
 
@@ -105,12 +88,18 @@ func (tu *TransactionUpdate) Save(ctx context.Context) (int, error) {
 		affected int
 	)
 	if len(tu.hooks) == 0 {
+		if err = tu.check(); err != nil {
+			return 0, err
+		}
 		affected, err = tu.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*TransactionMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = tu.check(); err != nil {
+				return 0, err
 			}
 			tu.mutation = mutation
 			affected, err = tu.sqlSave(ctx)
@@ -152,6 +141,17 @@ func (tu *TransactionUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (tu *TransactionUpdate) check() error {
+	if _, ok := tu.mutation.SenderID(); tu.mutation.SenderCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Transaction.sender"`)
+	}
+	if _, ok := tu.mutation.RecipientID(); tu.mutation.RecipientCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Transaction.recipient"`)
+	}
+	return nil
+}
+
 func (tu *TransactionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -176,24 +176,12 @@ func (tu *TransactionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.AddedAmount(); ok {
 		_spec.AddField(transaction.FieldAmount, field.TypeFloat64, value)
 	}
-	if value, ok := tu.mutation.Sender(); ok {
-		_spec.SetField(transaction.FieldSender, field.TypeInt, value)
-	}
-	if value, ok := tu.mutation.AddedSender(); ok {
-		_spec.AddField(transaction.FieldSender, field.TypeInt, value)
-	}
-	if value, ok := tu.mutation.Recipient(); ok {
-		_spec.SetField(transaction.FieldRecipient, field.TypeInt, value)
-	}
-	if value, ok := tu.mutation.AddedRecipient(); ok {
-		_spec.AddField(transaction.FieldRecipient, field.TypeInt, value)
-	}
-	if tu.mutation.WalletCleared() {
+	if tu.mutation.SenderCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   transaction.WalletTable,
-			Columns: []string{transaction.WalletColumn},
+			Table:   transaction.SenderTable,
+			Columns: []string{transaction.SenderColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -204,12 +192,47 @@ func (tu *TransactionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.WalletIDs(); len(nodes) > 0 {
+	if nodes := tu.mutation.SenderIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   transaction.WalletTable,
-			Columns: []string{transaction.WalletColumn},
+			Table:   transaction.SenderTable,
+			Columns: []string{transaction.SenderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: wallet.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.RecipientCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.RecipientTable,
+			Columns: []string{transaction.RecipientColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: wallet.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RecipientIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.RecipientTable,
+			Columns: []string{transaction.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -255,49 +278,26 @@ func (tuo *TransactionUpdateOne) AddAmount(d decimal.Decimal) *TransactionUpdate
 	return tuo
 }
 
-// SetSender sets the "sender" field.
-func (tuo *TransactionUpdateOne) SetSender(i int) *TransactionUpdateOne {
-	tuo.mutation.ResetSender()
-	tuo.mutation.SetSender(i)
+// SetSenderID sets the "sender_id" field.
+func (tuo *TransactionUpdateOne) SetSenderID(i int) *TransactionUpdateOne {
+	tuo.mutation.SetSenderID(i)
 	return tuo
 }
 
-// AddSender adds i to the "sender" field.
-func (tuo *TransactionUpdateOne) AddSender(i int) *TransactionUpdateOne {
-	tuo.mutation.AddSender(i)
+// SetRecipientID sets the "recipient_id" field.
+func (tuo *TransactionUpdateOne) SetRecipientID(i int) *TransactionUpdateOne {
+	tuo.mutation.SetRecipientID(i)
 	return tuo
 }
 
-// SetRecipient sets the "recipient" field.
-func (tuo *TransactionUpdateOne) SetRecipient(i int) *TransactionUpdateOne {
-	tuo.mutation.ResetRecipient()
-	tuo.mutation.SetRecipient(i)
-	return tuo
+// SetSender sets the "sender" edge to the Wallet entity.
+func (tuo *TransactionUpdateOne) SetSender(w *Wallet) *TransactionUpdateOne {
+	return tuo.SetSenderID(w.ID)
 }
 
-// AddRecipient adds i to the "recipient" field.
-func (tuo *TransactionUpdateOne) AddRecipient(i int) *TransactionUpdateOne {
-	tuo.mutation.AddRecipient(i)
-	return tuo
-}
-
-// SetWalletID sets the "wallet" edge to the Wallet entity by ID.
-func (tuo *TransactionUpdateOne) SetWalletID(id int) *TransactionUpdateOne {
-	tuo.mutation.SetWalletID(id)
-	return tuo
-}
-
-// SetNillableWalletID sets the "wallet" edge to the Wallet entity by ID if the given value is not nil.
-func (tuo *TransactionUpdateOne) SetNillableWalletID(id *int) *TransactionUpdateOne {
-	if id != nil {
-		tuo = tuo.SetWalletID(*id)
-	}
-	return tuo
-}
-
-// SetWallet sets the "wallet" edge to the Wallet entity.
-func (tuo *TransactionUpdateOne) SetWallet(w *Wallet) *TransactionUpdateOne {
-	return tuo.SetWalletID(w.ID)
+// SetRecipient sets the "recipient" edge to the Wallet entity.
+func (tuo *TransactionUpdateOne) SetRecipient(w *Wallet) *TransactionUpdateOne {
+	return tuo.SetRecipientID(w.ID)
 }
 
 // Mutation returns the TransactionMutation object of the builder.
@@ -305,9 +305,15 @@ func (tuo *TransactionUpdateOne) Mutation() *TransactionMutation {
 	return tuo.mutation
 }
 
-// ClearWallet clears the "wallet" edge to the Wallet entity.
-func (tuo *TransactionUpdateOne) ClearWallet() *TransactionUpdateOne {
-	tuo.mutation.ClearWallet()
+// ClearSender clears the "sender" edge to the Wallet entity.
+func (tuo *TransactionUpdateOne) ClearSender() *TransactionUpdateOne {
+	tuo.mutation.ClearSender()
+	return tuo
+}
+
+// ClearRecipient clears the "recipient" edge to the Wallet entity.
+func (tuo *TransactionUpdateOne) ClearRecipient() *TransactionUpdateOne {
+	tuo.mutation.ClearRecipient()
 	return tuo
 }
 
@@ -325,12 +331,18 @@ func (tuo *TransactionUpdateOne) Save(ctx context.Context) (*Transaction, error)
 		node *Transaction
 	)
 	if len(tuo.hooks) == 0 {
+		if err = tuo.check(); err != nil {
+			return nil, err
+		}
 		node, err = tuo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*TransactionMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = tuo.check(); err != nil {
+				return nil, err
 			}
 			tuo.mutation = mutation
 			node, err = tuo.sqlSave(ctx)
@@ -378,6 +390,17 @@ func (tuo *TransactionUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (tuo *TransactionUpdateOne) check() error {
+	if _, ok := tuo.mutation.SenderID(); tuo.mutation.SenderCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Transaction.sender"`)
+	}
+	if _, ok := tuo.mutation.RecipientID(); tuo.mutation.RecipientCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Transaction.recipient"`)
+	}
+	return nil
+}
+
 func (tuo *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transaction, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -419,24 +442,12 @@ func (tuo *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transactio
 	if value, ok := tuo.mutation.AddedAmount(); ok {
 		_spec.AddField(transaction.FieldAmount, field.TypeFloat64, value)
 	}
-	if value, ok := tuo.mutation.Sender(); ok {
-		_spec.SetField(transaction.FieldSender, field.TypeInt, value)
-	}
-	if value, ok := tuo.mutation.AddedSender(); ok {
-		_spec.AddField(transaction.FieldSender, field.TypeInt, value)
-	}
-	if value, ok := tuo.mutation.Recipient(); ok {
-		_spec.SetField(transaction.FieldRecipient, field.TypeInt, value)
-	}
-	if value, ok := tuo.mutation.AddedRecipient(); ok {
-		_spec.AddField(transaction.FieldRecipient, field.TypeInt, value)
-	}
-	if tuo.mutation.WalletCleared() {
+	if tuo.mutation.SenderCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   transaction.WalletTable,
-			Columns: []string{transaction.WalletColumn},
+			Table:   transaction.SenderTable,
+			Columns: []string{transaction.SenderColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -447,12 +458,47 @@ func (tuo *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transactio
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.WalletIDs(); len(nodes) > 0 {
+	if nodes := tuo.mutation.SenderIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   transaction.WalletTable,
-			Columns: []string{transaction.WalletColumn},
+			Table:   transaction.SenderTable,
+			Columns: []string{transaction.SenderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: wallet.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.RecipientCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.RecipientTable,
+			Columns: []string{transaction.RecipientColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: wallet.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RecipientIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.RecipientTable,
+			Columns: []string{transaction.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

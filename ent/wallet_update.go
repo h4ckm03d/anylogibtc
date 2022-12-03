@@ -55,19 +55,34 @@ func (wu *WalletUpdate) ClearUpdatedAt() *WalletUpdate {
 	return wu
 }
 
-// AddTransactionIDs adds the "transactions" edge to the Transaction entity by IDs.
-func (wu *WalletUpdate) AddTransactionIDs(ids ...int) *WalletUpdate {
-	wu.mutation.AddTransactionIDs(ids...)
+// AddSenderIDs adds the "senders" edge to the Transaction entity by IDs.
+func (wu *WalletUpdate) AddSenderIDs(ids ...int) *WalletUpdate {
+	wu.mutation.AddSenderIDs(ids...)
 	return wu
 }
 
-// AddTransactions adds the "transactions" edges to the Transaction entity.
-func (wu *WalletUpdate) AddTransactions(t ...*Transaction) *WalletUpdate {
+// AddSenders adds the "senders" edges to the Transaction entity.
+func (wu *WalletUpdate) AddSenders(t ...*Transaction) *WalletUpdate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
-	return wu.AddTransactionIDs(ids...)
+	return wu.AddSenderIDs(ids...)
+}
+
+// AddRecipientIDs adds the "recipients" edge to the Transaction entity by IDs.
+func (wu *WalletUpdate) AddRecipientIDs(ids ...int) *WalletUpdate {
+	wu.mutation.AddRecipientIDs(ids...)
+	return wu
+}
+
+// AddRecipients adds the "recipients" edges to the Transaction entity.
+func (wu *WalletUpdate) AddRecipients(t ...*Transaction) *WalletUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wu.AddRecipientIDs(ids...)
 }
 
 // Mutation returns the WalletMutation object of the builder.
@@ -75,25 +90,46 @@ func (wu *WalletUpdate) Mutation() *WalletMutation {
 	return wu.mutation
 }
 
-// ClearTransactions clears all "transactions" edges to the Transaction entity.
-func (wu *WalletUpdate) ClearTransactions() *WalletUpdate {
-	wu.mutation.ClearTransactions()
+// ClearSenders clears all "senders" edges to the Transaction entity.
+func (wu *WalletUpdate) ClearSenders() *WalletUpdate {
+	wu.mutation.ClearSenders()
 	return wu
 }
 
-// RemoveTransactionIDs removes the "transactions" edge to Transaction entities by IDs.
-func (wu *WalletUpdate) RemoveTransactionIDs(ids ...int) *WalletUpdate {
-	wu.mutation.RemoveTransactionIDs(ids...)
+// RemoveSenderIDs removes the "senders" edge to Transaction entities by IDs.
+func (wu *WalletUpdate) RemoveSenderIDs(ids ...int) *WalletUpdate {
+	wu.mutation.RemoveSenderIDs(ids...)
 	return wu
 }
 
-// RemoveTransactions removes "transactions" edges to Transaction entities.
-func (wu *WalletUpdate) RemoveTransactions(t ...*Transaction) *WalletUpdate {
+// RemoveSenders removes "senders" edges to Transaction entities.
+func (wu *WalletUpdate) RemoveSenders(t ...*Transaction) *WalletUpdate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
-	return wu.RemoveTransactionIDs(ids...)
+	return wu.RemoveSenderIDs(ids...)
+}
+
+// ClearRecipients clears all "recipients" edges to the Transaction entity.
+func (wu *WalletUpdate) ClearRecipients() *WalletUpdate {
+	wu.mutation.ClearRecipients()
+	return wu
+}
+
+// RemoveRecipientIDs removes the "recipients" edge to Transaction entities by IDs.
+func (wu *WalletUpdate) RemoveRecipientIDs(ids ...int) *WalletUpdate {
+	wu.mutation.RemoveRecipientIDs(ids...)
+	return wu
+}
+
+// RemoveRecipients removes "recipients" edges to Transaction entities.
+func (wu *WalletUpdate) RemoveRecipients(t ...*Transaction) *WalletUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wu.RemoveRecipientIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -177,12 +213,12 @@ func (wu *WalletUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if wu.mutation.UpdatedAtCleared() {
 		_spec.ClearField(wallet.FieldUpdatedAt, field.TypeTime)
 	}
-	if wu.mutation.TransactionsCleared() {
+	if wu.mutation.SendersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -193,12 +229,12 @@ func (wu *WalletUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wu.mutation.RemovedTransactionsIDs(); len(nodes) > 0 && !wu.mutation.TransactionsCleared() {
+	if nodes := wu.mutation.RemovedSendersIDs(); len(nodes) > 0 && !wu.mutation.SendersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -212,12 +248,66 @@ func (wu *WalletUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wu.mutation.TransactionsIDs(); len(nodes) > 0 {
+	if nodes := wu.mutation.SendersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wu.mutation.RecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedRecipientsIDs(); len(nodes) > 0 && !wu.mutation.RecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RecipientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -276,19 +366,34 @@ func (wuo *WalletUpdateOne) ClearUpdatedAt() *WalletUpdateOne {
 	return wuo
 }
 
-// AddTransactionIDs adds the "transactions" edge to the Transaction entity by IDs.
-func (wuo *WalletUpdateOne) AddTransactionIDs(ids ...int) *WalletUpdateOne {
-	wuo.mutation.AddTransactionIDs(ids...)
+// AddSenderIDs adds the "senders" edge to the Transaction entity by IDs.
+func (wuo *WalletUpdateOne) AddSenderIDs(ids ...int) *WalletUpdateOne {
+	wuo.mutation.AddSenderIDs(ids...)
 	return wuo
 }
 
-// AddTransactions adds the "transactions" edges to the Transaction entity.
-func (wuo *WalletUpdateOne) AddTransactions(t ...*Transaction) *WalletUpdateOne {
+// AddSenders adds the "senders" edges to the Transaction entity.
+func (wuo *WalletUpdateOne) AddSenders(t ...*Transaction) *WalletUpdateOne {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
-	return wuo.AddTransactionIDs(ids...)
+	return wuo.AddSenderIDs(ids...)
+}
+
+// AddRecipientIDs adds the "recipients" edge to the Transaction entity by IDs.
+func (wuo *WalletUpdateOne) AddRecipientIDs(ids ...int) *WalletUpdateOne {
+	wuo.mutation.AddRecipientIDs(ids...)
+	return wuo
+}
+
+// AddRecipients adds the "recipients" edges to the Transaction entity.
+func (wuo *WalletUpdateOne) AddRecipients(t ...*Transaction) *WalletUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wuo.AddRecipientIDs(ids...)
 }
 
 // Mutation returns the WalletMutation object of the builder.
@@ -296,25 +401,46 @@ func (wuo *WalletUpdateOne) Mutation() *WalletMutation {
 	return wuo.mutation
 }
 
-// ClearTransactions clears all "transactions" edges to the Transaction entity.
-func (wuo *WalletUpdateOne) ClearTransactions() *WalletUpdateOne {
-	wuo.mutation.ClearTransactions()
+// ClearSenders clears all "senders" edges to the Transaction entity.
+func (wuo *WalletUpdateOne) ClearSenders() *WalletUpdateOne {
+	wuo.mutation.ClearSenders()
 	return wuo
 }
 
-// RemoveTransactionIDs removes the "transactions" edge to Transaction entities by IDs.
-func (wuo *WalletUpdateOne) RemoveTransactionIDs(ids ...int) *WalletUpdateOne {
-	wuo.mutation.RemoveTransactionIDs(ids...)
+// RemoveSenderIDs removes the "senders" edge to Transaction entities by IDs.
+func (wuo *WalletUpdateOne) RemoveSenderIDs(ids ...int) *WalletUpdateOne {
+	wuo.mutation.RemoveSenderIDs(ids...)
 	return wuo
 }
 
-// RemoveTransactions removes "transactions" edges to Transaction entities.
-func (wuo *WalletUpdateOne) RemoveTransactions(t ...*Transaction) *WalletUpdateOne {
+// RemoveSenders removes "senders" edges to Transaction entities.
+func (wuo *WalletUpdateOne) RemoveSenders(t ...*Transaction) *WalletUpdateOne {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
-	return wuo.RemoveTransactionIDs(ids...)
+	return wuo.RemoveSenderIDs(ids...)
+}
+
+// ClearRecipients clears all "recipients" edges to the Transaction entity.
+func (wuo *WalletUpdateOne) ClearRecipients() *WalletUpdateOne {
+	wuo.mutation.ClearRecipients()
+	return wuo
+}
+
+// RemoveRecipientIDs removes the "recipients" edge to Transaction entities by IDs.
+func (wuo *WalletUpdateOne) RemoveRecipientIDs(ids ...int) *WalletUpdateOne {
+	wuo.mutation.RemoveRecipientIDs(ids...)
+	return wuo
+}
+
+// RemoveRecipients removes "recipients" edges to Transaction entities.
+func (wuo *WalletUpdateOne) RemoveRecipients(t ...*Transaction) *WalletUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wuo.RemoveRecipientIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -428,12 +554,12 @@ func (wuo *WalletUpdateOne) sqlSave(ctx context.Context) (_node *Wallet, err err
 	if wuo.mutation.UpdatedAtCleared() {
 		_spec.ClearField(wallet.FieldUpdatedAt, field.TypeTime)
 	}
-	if wuo.mutation.TransactionsCleared() {
+	if wuo.mutation.SendersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -444,12 +570,12 @@ func (wuo *WalletUpdateOne) sqlSave(ctx context.Context) (_node *Wallet, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wuo.mutation.RemovedTransactionsIDs(); len(nodes) > 0 && !wuo.mutation.TransactionsCleared() {
+	if nodes := wuo.mutation.RemovedSendersIDs(); len(nodes) > 0 && !wuo.mutation.SendersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -463,12 +589,66 @@ func (wuo *WalletUpdateOne) sqlSave(ctx context.Context) (_node *Wallet, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wuo.mutation.TransactionsIDs(); len(nodes) > 0 {
+	if nodes := wuo.mutation.SendersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.RecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedRecipientsIDs(); len(nodes) > 0 && !wuo.mutation.RecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RecipientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

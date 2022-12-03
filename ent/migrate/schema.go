@@ -13,9 +13,8 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "datetime", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeFloat64, SchemaType: map[string]string{"mysql": "decimal(6,2)", "postgres": "numeric(6,2)"}},
-		{Name: "sender", Type: field.TypeInt},
-		{Name: "recipient", Type: field.TypeInt},
-		{Name: "wallet_transactions", Type: field.TypeInt, Nullable: true},
+		{Name: "sender_id", Type: field.TypeInt},
+		{Name: "recipient_id", Type: field.TypeInt},
 	}
 	// TransactionsTable holds the schema information for the "transactions" table.
 	TransactionsTable = &schema.Table{
@@ -24,10 +23,16 @@ var (
 		PrimaryKey: []*schema.Column{TransactionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "transactions_wallets_transactions",
-				Columns:    []*schema.Column{TransactionsColumns[5]},
+				Symbol:     "transactions_wallets_senders",
+				Columns:    []*schema.Column{TransactionsColumns[3]},
 				RefColumns: []*schema.Column{WalletsColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "transactions_wallets_recipients",
+				Columns:    []*schema.Column{TransactionsColumns[4]},
+				RefColumns: []*schema.Column{WalletsColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -60,4 +65,5 @@ var (
 
 func init() {
 	TransactionsTable.ForeignKeys[0].RefTable = WalletsTable
+	TransactionsTable.ForeignKeys[1].RefTable = WalletsTable
 }

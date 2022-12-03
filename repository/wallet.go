@@ -1,14 +1,15 @@
 package repository
 
 import (
-	"anylogibtc/ent"
 	"errors"
+
+	"anylogibtc/ent"
 )
 
 var (
-	//ErrWalletNotFound is returned when a wallet is not found
+	// ErrWalletNotFound is returned when a wallet is not found
 	ErrWalletNotFound = errors.New("the wallet was not found")
-	//ErrWalletAlreadyExist is returned when trying to add a wallet that already exists
+	// ErrWalletAlreadyExist is returned when trying to add a wallet that already exists
 	ErrWalletAlreadyExist = errors.New("the wallet already exists")
 )
 

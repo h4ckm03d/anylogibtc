@@ -17,17 +17,26 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTransactions holds the string denoting the transactions edge name in mutations.
-	EdgeTransactions = "transactions"
+	// EdgeSenders holds the string denoting the senders edge name in mutations.
+	EdgeSenders = "senders"
+	// EdgeRecipients holds the string denoting the recipients edge name in mutations.
+	EdgeRecipients = "recipients"
 	// Table holds the table name of the wallet in the database.
 	Table = "wallets"
-	// TransactionsTable is the table that holds the transactions relation/edge.
-	TransactionsTable = "transactions"
-	// TransactionsInverseTable is the table name for the Transaction entity.
+	// SendersTable is the table that holds the senders relation/edge.
+	SendersTable = "transactions"
+	// SendersInverseTable is the table name for the Transaction entity.
 	// It exists in this package in order to avoid circular dependency with the "transaction" package.
-	TransactionsInverseTable = "transactions"
-	// TransactionsColumn is the table column denoting the transactions relation/edge.
-	TransactionsColumn = "wallet_transactions"
+	SendersInverseTable = "transactions"
+	// SendersColumn is the table column denoting the senders relation/edge.
+	SendersColumn = "sender_id"
+	// RecipientsTable is the table that holds the recipients relation/edge.
+	RecipientsTable = "transactions"
+	// RecipientsInverseTable is the table name for the Transaction entity.
+	// It exists in this package in order to avoid circular dependency with the "transaction" package.
+	RecipientsInverseTable = "transactions"
+	// RecipientsColumn is the table column denoting the recipients relation/edge.
+	RecipientsColumn = "recipient_id"
 )
 
 // Columns holds all SQL columns for wallet fields.

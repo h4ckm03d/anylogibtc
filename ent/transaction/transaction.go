@@ -15,21 +15,30 @@ const (
 	FieldDatetime = "datetime"
 	// FieldAmount holds the string denoting the amount field in the database.
 	FieldAmount = "amount"
-	// FieldSender holds the string denoting the sender field in the database.
-	FieldSender = "sender"
-	// FieldRecipient holds the string denoting the recipient field in the database.
-	FieldRecipient = "recipient"
-	// EdgeWallet holds the string denoting the wallet edge name in mutations.
-	EdgeWallet = "wallet"
+	// FieldSenderID holds the string denoting the sender_id field in the database.
+	FieldSenderID = "sender_id"
+	// FieldRecipientID holds the string denoting the recipient_id field in the database.
+	FieldRecipientID = "recipient_id"
+	// EdgeSender holds the string denoting the sender edge name in mutations.
+	EdgeSender = "sender"
+	// EdgeRecipient holds the string denoting the recipient edge name in mutations.
+	EdgeRecipient = "recipient"
 	// Table holds the table name of the transaction in the database.
 	Table = "transactions"
-	// WalletTable is the table that holds the wallet relation/edge.
-	WalletTable = "transactions"
-	// WalletInverseTable is the table name for the Wallet entity.
+	// SenderTable is the table that holds the sender relation/edge.
+	SenderTable = "transactions"
+	// SenderInverseTable is the table name for the Wallet entity.
 	// It exists in this package in order to avoid circular dependency with the "wallet" package.
-	WalletInverseTable = "wallets"
-	// WalletColumn is the table column denoting the wallet relation/edge.
-	WalletColumn = "wallet_transactions"
+	SenderInverseTable = "wallets"
+	// SenderColumn is the table column denoting the sender relation/edge.
+	SenderColumn = "sender_id"
+	// RecipientTable is the table that holds the recipient relation/edge.
+	RecipientTable = "transactions"
+	// RecipientInverseTable is the table name for the Wallet entity.
+	// It exists in this package in order to avoid circular dependency with the "wallet" package.
+	RecipientInverseTable = "wallets"
+	// RecipientColumn is the table column denoting the recipient relation/edge.
+	RecipientColumn = "recipient_id"
 )
 
 // Columns holds all SQL columns for transaction fields.
@@ -37,25 +46,14 @@ var Columns = []string{
 	FieldID,
 	FieldDatetime,
 	FieldAmount,
-	FieldSender,
-	FieldRecipient,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "transactions"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"wallet_transactions",
+	FieldSenderID,
+	FieldRecipientID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

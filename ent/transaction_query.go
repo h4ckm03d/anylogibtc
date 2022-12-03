@@ -18,14 +18,14 @@ import (
 // TransactionQuery is the builder for querying Transaction entities.
 type TransactionQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
-	predicates []predicate.Transaction
-	withWallet *WalletQuery
-	withFKs    bool
+	limit         *int
+	offset        *int
+	unique        *bool
+	order         []OrderFunc
+	fields        []string
+	predicates    []predicate.Transaction
+	withSender    *WalletQuery
+	withRecipient *WalletQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,8 +62,8 @@ func (tq *TransactionQuery) Order(o ...OrderFunc) *TransactionQuery {
 	return tq
 }
 
-// QueryWallet chains the current query on the "wallet" edge.
-func (tq *TransactionQuery) QueryWallet() *WalletQuery {
+// QuerySender chains the current query on the "sender" edge.
+func (tq *TransactionQuery) QuerySender() *WalletQuery {
 	query := &WalletQuery{config: tq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := tq.prepareQuery(ctx); err != nil {
@@ -76,7 +76,29 @@ func (tq *TransactionQuery) QueryWallet() *WalletQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
 			sqlgraph.To(wallet.Table, wallet.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, transaction.WalletTable, transaction.WalletColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.SenderTable, transaction.SenderColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRecipient chains the current query on the "recipient" edge.
+func (tq *TransactionQuery) QueryRecipient() *WalletQuery {
+	query := &WalletQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
+			sqlgraph.To(wallet.Table, wallet.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.RecipientTable, transaction.RecipientColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -260,12 +282,13 @@ func (tq *TransactionQuery) Clone() *TransactionQuery {
 		return nil
 	}
 	return &TransactionQuery{
-		config:     tq.config,
-		limit:      tq.limit,
-		offset:     tq.offset,
-		order:      append([]OrderFunc{}, tq.order...),
-		predicates: append([]predicate.Transaction{}, tq.predicates...),
-		withWallet: tq.withWallet.Clone(),
+		config:        tq.config,
+		limit:         tq.limit,
+		offset:        tq.offset,
+		order:         append([]OrderFunc{}, tq.order...),
+		predicates:    append([]predicate.Transaction{}, tq.predicates...),
+		withSender:    tq.withSender.Clone(),
+		withRecipient: tq.withRecipient.Clone(),
 		// clone intermediate query.
 		sql:    tq.sql.Clone(),
 		path:   tq.path,
@@ -273,14 +296,25 @@ func (tq *TransactionQuery) Clone() *TransactionQuery {
 	}
 }
 
-// WithWallet tells the query-builder to eager-load the nodes that are connected to
-// the "wallet" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TransactionQuery) WithWallet(opts ...func(*WalletQuery)) *TransactionQuery {
+// WithSender tells the query-builder to eager-load the nodes that are connected to
+// the "sender" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TransactionQuery) WithSender(opts ...func(*WalletQuery)) *TransactionQuery {
 	query := &WalletQuery{config: tq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	tq.withWallet = query
+	tq.withSender = query
+	return tq
+}
+
+// WithRecipient tells the query-builder to eager-load the nodes that are connected to
+// the "recipient" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TransactionQuery) WithRecipient(opts ...func(*WalletQuery)) *TransactionQuery {
+	query := &WalletQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withRecipient = query
 	return tq
 }
 
@@ -356,18 +390,12 @@ func (tq *TransactionQuery) prepareQuery(ctx context.Context) error {
 func (tq *TransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Transaction, error) {
 	var (
 		nodes       = []*Transaction{}
-		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [1]bool{
-			tq.withWallet != nil,
+		loadedTypes = [2]bool{
+			tq.withSender != nil,
+			tq.withRecipient != nil,
 		}
 	)
-	if tq.withWallet != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, transaction.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Transaction).scanValues(nil, columns)
 	}
@@ -386,23 +414,26 @@ func (tq *TransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tq.withWallet; query != nil {
-		if err := tq.loadWallet(ctx, query, nodes, nil,
-			func(n *Transaction, e *Wallet) { n.Edges.Wallet = e }); err != nil {
+	if query := tq.withSender; query != nil {
+		if err := tq.loadSender(ctx, query, nodes, nil,
+			func(n *Transaction, e *Wallet) { n.Edges.Sender = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withRecipient; query != nil {
+		if err := tq.loadRecipient(ctx, query, nodes, nil,
+			func(n *Transaction, e *Wallet) { n.Edges.Recipient = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (tq *TransactionQuery) loadWallet(ctx context.Context, query *WalletQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *Wallet)) error {
+func (tq *TransactionQuery) loadSender(ctx context.Context, query *WalletQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *Wallet)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Transaction)
 	for i := range nodes {
-		if nodes[i].wallet_transactions == nil {
-			continue
-		}
-		fk := *nodes[i].wallet_transactions
+		fk := nodes[i].SenderID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -416,7 +447,33 @@ func (tq *TransactionQuery) loadWallet(ctx context.Context, query *WalletQuery, 
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "wallet_transactions" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "sender_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (tq *TransactionQuery) loadRecipient(ctx context.Context, query *WalletQuery, nodes []*Transaction, init func(*Transaction), assign func(*Transaction, *Wallet)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Transaction)
+	for i := range nodes {
+		fk := nodes[i].RecipientID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	query.Where(wallet.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "recipient_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

@@ -343,25 +343,53 @@ func UpdatedAtNotNil() predicate.Wallet {
 	})
 }
 
-// HasTransactions applies the HasEdge predicate on the "transactions" edge.
-func HasTransactions() predicate.Wallet {
+// HasSenders applies the HasEdge predicate on the "senders" edge.
+func HasSenders() predicate.Wallet {
 	return predicate.Wallet(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TransactionsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TransactionsTable, TransactionsColumn),
+			sqlgraph.To(SendersTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SendersTable, SendersColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTransactionsWith applies the HasEdge predicate on the "transactions" edge with a given conditions (other predicates).
-func HasTransactionsWith(preds ...predicate.Transaction) predicate.Wallet {
+// HasSendersWith applies the HasEdge predicate on the "senders" edge with a given conditions (other predicates).
+func HasSendersWith(preds ...predicate.Transaction) predicate.Wallet {
 	return predicate.Wallet(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TransactionsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TransactionsTable, TransactionsColumn),
+			sqlgraph.To(SendersInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SendersTable, SendersColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRecipients applies the HasEdge predicate on the "recipients" edge.
+func HasRecipients() predicate.Wallet {
+	return predicate.Wallet(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(RecipientsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RecipientsTable, RecipientsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRecipientsWith applies the HasEdge predicate on the "recipients" edge with a given conditions (other predicates).
+func HasRecipientsWith(preds ...predicate.Transaction) predicate.Wallet {
+	return predicate.Wallet(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(RecipientsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RecipientsTable, RecipientsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

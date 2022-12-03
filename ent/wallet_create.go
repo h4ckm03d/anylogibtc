@@ -55,19 +55,34 @@ func (wc *WalletCreate) SetNillableUpdatedAt(t *time.Time) *WalletCreate {
 	return wc
 }
 
-// AddTransactionIDs adds the "transactions" edge to the Transaction entity by IDs.
-func (wc *WalletCreate) AddTransactionIDs(ids ...int) *WalletCreate {
-	wc.mutation.AddTransactionIDs(ids...)
+// AddSenderIDs adds the "senders" edge to the Transaction entity by IDs.
+func (wc *WalletCreate) AddSenderIDs(ids ...int) *WalletCreate {
+	wc.mutation.AddSenderIDs(ids...)
 	return wc
 }
 
-// AddTransactions adds the "transactions" edges to the Transaction entity.
-func (wc *WalletCreate) AddTransactions(t ...*Transaction) *WalletCreate {
+// AddSenders adds the "senders" edges to the Transaction entity.
+func (wc *WalletCreate) AddSenders(t ...*Transaction) *WalletCreate {
 	ids := make([]int, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
-	return wc.AddTransactionIDs(ids...)
+	return wc.AddSenderIDs(ids...)
+}
+
+// AddRecipientIDs adds the "recipients" edge to the Transaction entity by IDs.
+func (wc *WalletCreate) AddRecipientIDs(ids ...int) *WalletCreate {
+	wc.mutation.AddRecipientIDs(ids...)
+	return wc
+}
+
+// AddRecipients adds the "recipients" edges to the Transaction entity.
+func (wc *WalletCreate) AddRecipients(t ...*Transaction) *WalletCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wc.AddRecipientIDs(ids...)
 }
 
 // Mutation returns the WalletMutation object of the builder.
@@ -204,12 +219,31 @@ func (wc *WalletCreate) createSpec() (*Wallet, *sqlgraph.CreateSpec) {
 		_spec.SetField(wallet.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := wc.mutation.TransactionsIDs(); len(nodes) > 0 {
+	if nodes := wc.mutation.SendersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   wallet.TransactionsTable,
-			Columns: []string{wallet.TransactionsColumn},
+			Table:   wallet.SendersTable,
+			Columns: []string{wallet.SendersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.RecipientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   wallet.RecipientsTable,
+			Columns: []string{wallet.RecipientsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

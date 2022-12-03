@@ -33,22 +33,20 @@ const (
 // TransactionMutation represents an operation that mutates the Transaction nodes in the graph.
 type TransactionMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	datetime      *time.Time
-	amount        *decimal.Decimal
-	addamount     *decimal.Decimal
-	sender        *int
-	addsender     *int
-	recipient     *int
-	addrecipient  *int
-	clearedFields map[string]struct{}
-	wallet        *int
-	clearedwallet bool
-	done          bool
-	oldValue      func(context.Context) (*Transaction, error)
-	predicates    []predicate.Transaction
+	op               Op
+	typ              string
+	id               *int
+	datetime         *time.Time
+	amount           *decimal.Decimal
+	addamount        *decimal.Decimal
+	clearedFields    map[string]struct{}
+	sender           *int
+	clearedsender    bool
+	recipient        *int
+	clearedrecipient bool
+	done             bool
+	oldValue         func(context.Context) (*Transaction, error)
+	predicates       []predicate.Transaction
 }
 
 var _ ent.Mutation = (*TransactionMutation)(nil)
@@ -241,14 +239,13 @@ func (m *TransactionMutation) ResetAmount() {
 	m.addamount = nil
 }
 
-// SetSender sets the "sender" field.
-func (m *TransactionMutation) SetSender(i int) {
+// SetSenderID sets the "sender_id" field.
+func (m *TransactionMutation) SetSenderID(i int) {
 	m.sender = &i
-	m.addsender = nil
 }
 
-// Sender returns the value of the "sender" field in the mutation.
-func (m *TransactionMutation) Sender() (r int, exists bool) {
+// SenderID returns the value of the "sender_id" field in the mutation.
+func (m *TransactionMutation) SenderID() (r int, exists bool) {
 	v := m.sender
 	if v == nil {
 		return
@@ -256,55 +253,35 @@ func (m *TransactionMutation) Sender() (r int, exists bool) {
 	return *v, true
 }
 
-// OldSender returns the old "sender" field's value of the Transaction entity.
+// OldSenderID returns the old "sender_id" field's value of the Transaction entity.
 // If the Transaction object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TransactionMutation) OldSender(ctx context.Context) (v int, err error) {
+func (m *TransactionMutation) OldSenderID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSender is only allowed on UpdateOne operations")
+		return v, errors.New("OldSenderID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSender requires an ID field in the mutation")
+		return v, errors.New("OldSenderID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSender: %w", err)
+		return v, fmt.Errorf("querying old value for OldSenderID: %w", err)
 	}
-	return oldValue.Sender, nil
+	return oldValue.SenderID, nil
 }
 
-// AddSender adds i to the "sender" field.
-func (m *TransactionMutation) AddSender(i int) {
-	if m.addsender != nil {
-		*m.addsender += i
-	} else {
-		m.addsender = &i
-	}
-}
-
-// AddedSender returns the value that was added to the "sender" field in this mutation.
-func (m *TransactionMutation) AddedSender() (r int, exists bool) {
-	v := m.addsender
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetSender resets all changes to the "sender" field.
-func (m *TransactionMutation) ResetSender() {
+// ResetSenderID resets all changes to the "sender_id" field.
+func (m *TransactionMutation) ResetSenderID() {
 	m.sender = nil
-	m.addsender = nil
 }
 
-// SetRecipient sets the "recipient" field.
-func (m *TransactionMutation) SetRecipient(i int) {
+// SetRecipientID sets the "recipient_id" field.
+func (m *TransactionMutation) SetRecipientID(i int) {
 	m.recipient = &i
-	m.addrecipient = nil
 }
 
-// Recipient returns the value of the "recipient" field in the mutation.
-func (m *TransactionMutation) Recipient() (r int, exists bool) {
+// RecipientID returns the value of the "recipient_id" field in the mutation.
+func (m *TransactionMutation) RecipientID() (r int, exists bool) {
 	v := m.recipient
 	if v == nil {
 		return
@@ -312,84 +289,78 @@ func (m *TransactionMutation) Recipient() (r int, exists bool) {
 	return *v, true
 }
 
-// OldRecipient returns the old "recipient" field's value of the Transaction entity.
+// OldRecipientID returns the old "recipient_id" field's value of the Transaction entity.
 // If the Transaction object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TransactionMutation) OldRecipient(ctx context.Context) (v int, err error) {
+func (m *TransactionMutation) OldRecipientID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRecipient is only allowed on UpdateOne operations")
+		return v, errors.New("OldRecipientID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRecipient requires an ID field in the mutation")
+		return v, errors.New("OldRecipientID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRecipient: %w", err)
+		return v, fmt.Errorf("querying old value for OldRecipientID: %w", err)
 	}
-	return oldValue.Recipient, nil
+	return oldValue.RecipientID, nil
 }
 
-// AddRecipient adds i to the "recipient" field.
-func (m *TransactionMutation) AddRecipient(i int) {
-	if m.addrecipient != nil {
-		*m.addrecipient += i
-	} else {
-		m.addrecipient = &i
-	}
-}
-
-// AddedRecipient returns the value that was added to the "recipient" field in this mutation.
-func (m *TransactionMutation) AddedRecipient() (r int, exists bool) {
-	v := m.addrecipient
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetRecipient resets all changes to the "recipient" field.
-func (m *TransactionMutation) ResetRecipient() {
+// ResetRecipientID resets all changes to the "recipient_id" field.
+func (m *TransactionMutation) ResetRecipientID() {
 	m.recipient = nil
-	m.addrecipient = nil
 }
 
-// SetWalletID sets the "wallet" edge to the Wallet entity by id.
-func (m *TransactionMutation) SetWalletID(id int) {
-	m.wallet = &id
+// ClearSender clears the "sender" edge to the Wallet entity.
+func (m *TransactionMutation) ClearSender() {
+	m.clearedsender = true
 }
 
-// ClearWallet clears the "wallet" edge to the Wallet entity.
-func (m *TransactionMutation) ClearWallet() {
-	m.clearedwallet = true
+// SenderCleared reports if the "sender" edge to the Wallet entity was cleared.
+func (m *TransactionMutation) SenderCleared() bool {
+	return m.clearedsender
 }
 
-// WalletCleared reports if the "wallet" edge to the Wallet entity was cleared.
-func (m *TransactionMutation) WalletCleared() bool {
-	return m.clearedwallet
-}
-
-// WalletID returns the "wallet" edge ID in the mutation.
-func (m *TransactionMutation) WalletID() (id int, exists bool) {
-	if m.wallet != nil {
-		return *m.wallet, true
-	}
-	return
-}
-
-// WalletIDs returns the "wallet" edge IDs in the mutation.
+// SenderIDs returns the "sender" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// WalletID instead. It exists only for internal usage by the builders.
-func (m *TransactionMutation) WalletIDs() (ids []int) {
-	if id := m.wallet; id != nil {
+// SenderID instead. It exists only for internal usage by the builders.
+func (m *TransactionMutation) SenderIDs() (ids []int) {
+	if id := m.sender; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetWallet resets all changes to the "wallet" edge.
-func (m *TransactionMutation) ResetWallet() {
-	m.wallet = nil
-	m.clearedwallet = false
+// ResetSender resets all changes to the "sender" edge.
+func (m *TransactionMutation) ResetSender() {
+	m.sender = nil
+	m.clearedsender = false
+}
+
+// ClearRecipient clears the "recipient" edge to the Wallet entity.
+func (m *TransactionMutation) ClearRecipient() {
+	m.clearedrecipient = true
+}
+
+// RecipientCleared reports if the "recipient" edge to the Wallet entity was cleared.
+func (m *TransactionMutation) RecipientCleared() bool {
+	return m.clearedrecipient
+}
+
+// RecipientIDs returns the "recipient" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RecipientID instead. It exists only for internal usage by the builders.
+func (m *TransactionMutation) RecipientIDs() (ids []int) {
+	if id := m.recipient; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRecipient resets all changes to the "recipient" edge.
+func (m *TransactionMutation) ResetRecipient() {
+	m.recipient = nil
+	m.clearedrecipient = false
 }
 
 // Where appends a list predicates to the TransactionMutation builder.
@@ -419,10 +390,10 @@ func (m *TransactionMutation) Fields() []string {
 		fields = append(fields, transaction.FieldAmount)
 	}
 	if m.sender != nil {
-		fields = append(fields, transaction.FieldSender)
+		fields = append(fields, transaction.FieldSenderID)
 	}
 	if m.recipient != nil {
-		fields = append(fields, transaction.FieldRecipient)
+		fields = append(fields, transaction.FieldRecipientID)
 	}
 	return fields
 }
@@ -436,10 +407,10 @@ func (m *TransactionMutation) Field(name string) (ent.Value, bool) {
 		return m.Datetime()
 	case transaction.FieldAmount:
 		return m.Amount()
-	case transaction.FieldSender:
-		return m.Sender()
-	case transaction.FieldRecipient:
-		return m.Recipient()
+	case transaction.FieldSenderID:
+		return m.SenderID()
+	case transaction.FieldRecipientID:
+		return m.RecipientID()
 	}
 	return nil, false
 }
@@ -453,10 +424,10 @@ func (m *TransactionMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldDatetime(ctx)
 	case transaction.FieldAmount:
 		return m.OldAmount(ctx)
-	case transaction.FieldSender:
-		return m.OldSender(ctx)
-	case transaction.FieldRecipient:
-		return m.OldRecipient(ctx)
+	case transaction.FieldSenderID:
+		return m.OldSenderID(ctx)
+	case transaction.FieldRecipientID:
+		return m.OldRecipientID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Transaction field %s", name)
 }
@@ -480,19 +451,19 @@ func (m *TransactionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAmount(v)
 		return nil
-	case transaction.FieldSender:
+	case transaction.FieldSenderID:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSender(v)
+		m.SetSenderID(v)
 		return nil
-	case transaction.FieldRecipient:
+	case transaction.FieldRecipientID:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetRecipient(v)
+		m.SetRecipientID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction field %s", name)
@@ -505,12 +476,6 @@ func (m *TransactionMutation) AddedFields() []string {
 	if m.addamount != nil {
 		fields = append(fields, transaction.FieldAmount)
 	}
-	if m.addsender != nil {
-		fields = append(fields, transaction.FieldSender)
-	}
-	if m.addrecipient != nil {
-		fields = append(fields, transaction.FieldRecipient)
-	}
 	return fields
 }
 
@@ -521,10 +486,6 @@ func (m *TransactionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case transaction.FieldAmount:
 		return m.AddedAmount()
-	case transaction.FieldSender:
-		return m.AddedSender()
-	case transaction.FieldRecipient:
-		return m.AddedRecipient()
 	}
 	return nil, false
 }
@@ -540,20 +501,6 @@ func (m *TransactionMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddAmount(v)
-		return nil
-	case transaction.FieldSender:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddSender(v)
-		return nil
-	case transaction.FieldRecipient:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddRecipient(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction numeric field %s", name)
@@ -588,11 +535,11 @@ func (m *TransactionMutation) ResetField(name string) error {
 	case transaction.FieldAmount:
 		m.ResetAmount()
 		return nil
-	case transaction.FieldSender:
-		m.ResetSender()
+	case transaction.FieldSenderID:
+		m.ResetSenderID()
 		return nil
-	case transaction.FieldRecipient:
-		m.ResetRecipient()
+	case transaction.FieldRecipientID:
+		m.ResetRecipientID()
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction field %s", name)
@@ -600,9 +547,12 @@ func (m *TransactionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TransactionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.wallet != nil {
-		edges = append(edges, transaction.EdgeWallet)
+	edges := make([]string, 0, 2)
+	if m.sender != nil {
+		edges = append(edges, transaction.EdgeSender)
+	}
+	if m.recipient != nil {
+		edges = append(edges, transaction.EdgeRecipient)
 	}
 	return edges
 }
@@ -611,8 +561,12 @@ func (m *TransactionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case transaction.EdgeWallet:
-		if id := m.wallet; id != nil {
+	case transaction.EdgeSender:
+		if id := m.sender; id != nil {
+			return []ent.Value{*id}
+		}
+	case transaction.EdgeRecipient:
+		if id := m.recipient; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -621,7 +575,7 @@ func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TransactionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -633,9 +587,12 @@ func (m *TransactionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TransactionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedwallet {
-		edges = append(edges, transaction.EdgeWallet)
+	edges := make([]string, 0, 2)
+	if m.clearedsender {
+		edges = append(edges, transaction.EdgeSender)
+	}
+	if m.clearedrecipient {
+		edges = append(edges, transaction.EdgeRecipient)
 	}
 	return edges
 }
@@ -644,8 +601,10 @@ func (m *TransactionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *TransactionMutation) EdgeCleared(name string) bool {
 	switch name {
-	case transaction.EdgeWallet:
-		return m.clearedwallet
+	case transaction.EdgeSender:
+		return m.clearedsender
+	case transaction.EdgeRecipient:
+		return m.clearedrecipient
 	}
 	return false
 }
@@ -654,8 +613,11 @@ func (m *TransactionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *TransactionMutation) ClearEdge(name string) error {
 	switch name {
-	case transaction.EdgeWallet:
-		m.ClearWallet()
+	case transaction.EdgeSender:
+		m.ClearSender()
+		return nil
+	case transaction.EdgeRecipient:
+		m.ClearRecipient()
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction unique edge %s", name)
@@ -665,8 +627,11 @@ func (m *TransactionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TransactionMutation) ResetEdge(name string) error {
 	switch name {
-	case transaction.EdgeWallet:
-		m.ResetWallet()
+	case transaction.EdgeSender:
+		m.ResetSender()
+		return nil
+	case transaction.EdgeRecipient:
+		m.ResetRecipient()
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction edge %s", name)
@@ -675,19 +640,22 @@ func (m *TransactionMutation) ResetEdge(name string) error {
 // WalletMutation represents an operation that mutates the Wallet nodes in the graph.
 type WalletMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	name                *string
-	created_at          *time.Time
-	updated_at          *time.Time
-	clearedFields       map[string]struct{}
-	transactions        map[int]struct{}
-	removedtransactions map[int]struct{}
-	clearedtransactions bool
-	done                bool
-	oldValue            func(context.Context) (*Wallet, error)
-	predicates          []predicate.Wallet
+	op                Op
+	typ               string
+	id                *int
+	name              *string
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	senders           map[int]struct{}
+	removedsenders    map[int]struct{}
+	clearedsenders    bool
+	recipients        map[int]struct{}
+	removedrecipients map[int]struct{}
+	clearedrecipients bool
+	done              bool
+	oldValue          func(context.Context) (*Wallet, error)
+	predicates        []predicate.Wallet
 }
 
 var _ ent.Mutation = (*WalletMutation)(nil)
@@ -909,58 +877,112 @@ func (m *WalletMutation) ResetUpdatedAt() {
 	delete(m.clearedFields, wallet.FieldUpdatedAt)
 }
 
-// AddTransactionIDs adds the "transactions" edge to the Transaction entity by ids.
-func (m *WalletMutation) AddTransactionIDs(ids ...int) {
-	if m.transactions == nil {
-		m.transactions = make(map[int]struct{})
+// AddSenderIDs adds the "senders" edge to the Transaction entity by ids.
+func (m *WalletMutation) AddSenderIDs(ids ...int) {
+	if m.senders == nil {
+		m.senders = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.transactions[ids[i]] = struct{}{}
+		m.senders[ids[i]] = struct{}{}
 	}
 }
 
-// ClearTransactions clears the "transactions" edge to the Transaction entity.
-func (m *WalletMutation) ClearTransactions() {
-	m.clearedtransactions = true
+// ClearSenders clears the "senders" edge to the Transaction entity.
+func (m *WalletMutation) ClearSenders() {
+	m.clearedsenders = true
 }
 
-// TransactionsCleared reports if the "transactions" edge to the Transaction entity was cleared.
-func (m *WalletMutation) TransactionsCleared() bool {
-	return m.clearedtransactions
+// SendersCleared reports if the "senders" edge to the Transaction entity was cleared.
+func (m *WalletMutation) SendersCleared() bool {
+	return m.clearedsenders
 }
 
-// RemoveTransactionIDs removes the "transactions" edge to the Transaction entity by IDs.
-func (m *WalletMutation) RemoveTransactionIDs(ids ...int) {
-	if m.removedtransactions == nil {
-		m.removedtransactions = make(map[int]struct{})
+// RemoveSenderIDs removes the "senders" edge to the Transaction entity by IDs.
+func (m *WalletMutation) RemoveSenderIDs(ids ...int) {
+	if m.removedsenders == nil {
+		m.removedsenders = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.transactions, ids[i])
-		m.removedtransactions[ids[i]] = struct{}{}
+		delete(m.senders, ids[i])
+		m.removedsenders[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedTransactions returns the removed IDs of the "transactions" edge to the Transaction entity.
-func (m *WalletMutation) RemovedTransactionsIDs() (ids []int) {
-	for id := range m.removedtransactions {
+// RemovedSenders returns the removed IDs of the "senders" edge to the Transaction entity.
+func (m *WalletMutation) RemovedSendersIDs() (ids []int) {
+	for id := range m.removedsenders {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// TransactionsIDs returns the "transactions" edge IDs in the mutation.
-func (m *WalletMutation) TransactionsIDs() (ids []int) {
-	for id := range m.transactions {
+// SendersIDs returns the "senders" edge IDs in the mutation.
+func (m *WalletMutation) SendersIDs() (ids []int) {
+	for id := range m.senders {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetTransactions resets all changes to the "transactions" edge.
-func (m *WalletMutation) ResetTransactions() {
-	m.transactions = nil
-	m.clearedtransactions = false
-	m.removedtransactions = nil
+// ResetSenders resets all changes to the "senders" edge.
+func (m *WalletMutation) ResetSenders() {
+	m.senders = nil
+	m.clearedsenders = false
+	m.removedsenders = nil
+}
+
+// AddRecipientIDs adds the "recipients" edge to the Transaction entity by ids.
+func (m *WalletMutation) AddRecipientIDs(ids ...int) {
+	if m.recipients == nil {
+		m.recipients = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.recipients[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRecipients clears the "recipients" edge to the Transaction entity.
+func (m *WalletMutation) ClearRecipients() {
+	m.clearedrecipients = true
+}
+
+// RecipientsCleared reports if the "recipients" edge to the Transaction entity was cleared.
+func (m *WalletMutation) RecipientsCleared() bool {
+	return m.clearedrecipients
+}
+
+// RemoveRecipientIDs removes the "recipients" edge to the Transaction entity by IDs.
+func (m *WalletMutation) RemoveRecipientIDs(ids ...int) {
+	if m.removedrecipients == nil {
+		m.removedrecipients = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.recipients, ids[i])
+		m.removedrecipients[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRecipients returns the removed IDs of the "recipients" edge to the Transaction entity.
+func (m *WalletMutation) RemovedRecipientsIDs() (ids []int) {
+	for id := range m.removedrecipients {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RecipientsIDs returns the "recipients" edge IDs in the mutation.
+func (m *WalletMutation) RecipientsIDs() (ids []int) {
+	for id := range m.recipients {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRecipients resets all changes to the "recipients" edge.
+func (m *WalletMutation) ResetRecipients() {
+	m.recipients = nil
+	m.clearedrecipients = false
+	m.removedrecipients = nil
 }
 
 // Where appends a list predicates to the WalletMutation builder.
@@ -1124,9 +1146,12 @@ func (m *WalletMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WalletMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.transactions != nil {
-		edges = append(edges, wallet.EdgeTransactions)
+	edges := make([]string, 0, 2)
+	if m.senders != nil {
+		edges = append(edges, wallet.EdgeSenders)
+	}
+	if m.recipients != nil {
+		edges = append(edges, wallet.EdgeRecipients)
 	}
 	return edges
 }
@@ -1135,9 +1160,15 @@ func (m *WalletMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WalletMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case wallet.EdgeTransactions:
-		ids := make([]ent.Value, 0, len(m.transactions))
-		for id := range m.transactions {
+	case wallet.EdgeSenders:
+		ids := make([]ent.Value, 0, len(m.senders))
+		for id := range m.senders {
+			ids = append(ids, id)
+		}
+		return ids
+	case wallet.EdgeRecipients:
+		ids := make([]ent.Value, 0, len(m.recipients))
+		for id := range m.recipients {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1147,9 +1178,12 @@ func (m *WalletMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WalletMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.removedtransactions != nil {
-		edges = append(edges, wallet.EdgeTransactions)
+	edges := make([]string, 0, 2)
+	if m.removedsenders != nil {
+		edges = append(edges, wallet.EdgeSenders)
+	}
+	if m.removedrecipients != nil {
+		edges = append(edges, wallet.EdgeRecipients)
 	}
 	return edges
 }
@@ -1158,9 +1192,15 @@ func (m *WalletMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *WalletMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case wallet.EdgeTransactions:
-		ids := make([]ent.Value, 0, len(m.removedtransactions))
-		for id := range m.removedtransactions {
+	case wallet.EdgeSenders:
+		ids := make([]ent.Value, 0, len(m.removedsenders))
+		for id := range m.removedsenders {
+			ids = append(ids, id)
+		}
+		return ids
+	case wallet.EdgeRecipients:
+		ids := make([]ent.Value, 0, len(m.removedrecipients))
+		for id := range m.removedrecipients {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1170,9 +1210,12 @@ func (m *WalletMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WalletMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedtransactions {
-		edges = append(edges, wallet.EdgeTransactions)
+	edges := make([]string, 0, 2)
+	if m.clearedsenders {
+		edges = append(edges, wallet.EdgeSenders)
+	}
+	if m.clearedrecipients {
+		edges = append(edges, wallet.EdgeRecipients)
 	}
 	return edges
 }
@@ -1181,8 +1224,10 @@ func (m *WalletMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WalletMutation) EdgeCleared(name string) bool {
 	switch name {
-	case wallet.EdgeTransactions:
-		return m.clearedtransactions
+	case wallet.EdgeSenders:
+		return m.clearedsenders
+	case wallet.EdgeRecipients:
+		return m.clearedrecipients
 	}
 	return false
 }
@@ -1199,8 +1244,11 @@ func (m *WalletMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WalletMutation) ResetEdge(name string) error {
 	switch name {
-	case wallet.EdgeTransactions:
-		m.ResetTransactions()
+	case wallet.EdgeSenders:
+		m.ResetSenders()
+		return nil
+	case wallet.EdgeRecipients:
+		m.ResetRecipients()
 		return nil
 	}
 	return fmt.Errorf("unknown Wallet edge %s", name)

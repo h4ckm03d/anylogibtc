@@ -25,6 +25,7 @@ func (Wallet) Fields() []ent.Field {
 // Edges of the Wallet.
 func (Wallet) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("transactions", Transaction.Type),
+		edge.To("senders", Transaction.Type),
+		edge.To("recipients", Transaction.Type),
 	}
 }

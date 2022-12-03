@@ -42,35 +42,26 @@ func (tc *TransactionCreate) SetAmount(d decimal.Decimal) *TransactionCreate {
 	return tc
 }
 
-// SetSender sets the "sender" field.
-func (tc *TransactionCreate) SetSender(i int) *TransactionCreate {
-	tc.mutation.SetSender(i)
+// SetSenderID sets the "sender_id" field.
+func (tc *TransactionCreate) SetSenderID(i int) *TransactionCreate {
+	tc.mutation.SetSenderID(i)
 	return tc
 }
 
-// SetRecipient sets the "recipient" field.
-func (tc *TransactionCreate) SetRecipient(i int) *TransactionCreate {
-	tc.mutation.SetRecipient(i)
+// SetRecipientID sets the "recipient_id" field.
+func (tc *TransactionCreate) SetRecipientID(i int) *TransactionCreate {
+	tc.mutation.SetRecipientID(i)
 	return tc
 }
 
-// SetWalletID sets the "wallet" edge to the Wallet entity by ID.
-func (tc *TransactionCreate) SetWalletID(id int) *TransactionCreate {
-	tc.mutation.SetWalletID(id)
-	return tc
+// SetSender sets the "sender" edge to the Wallet entity.
+func (tc *TransactionCreate) SetSender(w *Wallet) *TransactionCreate {
+	return tc.SetSenderID(w.ID)
 }
 
-// SetNillableWalletID sets the "wallet" edge to the Wallet entity by ID if the given value is not nil.
-func (tc *TransactionCreate) SetNillableWalletID(id *int) *TransactionCreate {
-	if id != nil {
-		tc = tc.SetWalletID(*id)
-	}
-	return tc
-}
-
-// SetWallet sets the "wallet" edge to the Wallet entity.
-func (tc *TransactionCreate) SetWallet(w *Wallet) *TransactionCreate {
-	return tc.SetWalletID(w.ID)
+// SetRecipient sets the "recipient" edge to the Wallet entity.
+func (tc *TransactionCreate) SetRecipient(w *Wallet) *TransactionCreate {
+	return tc.SetRecipientID(w.ID)
 }
 
 // Mutation returns the TransactionMutation object of the builder.
@@ -164,11 +155,17 @@ func (tc *TransactionCreate) check() error {
 	if _, ok := tc.mutation.Amount(); !ok {
 		return &ValidationError{Name: "amount", err: errors.New(`ent: missing required field "Transaction.amount"`)}
 	}
-	if _, ok := tc.mutation.Sender(); !ok {
-		return &ValidationError{Name: "sender", err: errors.New(`ent: missing required field "Transaction.sender"`)}
+	if _, ok := tc.mutation.SenderID(); !ok {
+		return &ValidationError{Name: "sender_id", err: errors.New(`ent: missing required field "Transaction.sender_id"`)}
 	}
-	if _, ok := tc.mutation.Recipient(); !ok {
-		return &ValidationError{Name: "recipient", err: errors.New(`ent: missing required field "Transaction.recipient"`)}
+	if _, ok := tc.mutation.RecipientID(); !ok {
+		return &ValidationError{Name: "recipient_id", err: errors.New(`ent: missing required field "Transaction.recipient_id"`)}
+	}
+	if _, ok := tc.mutation.SenderID(); !ok {
+		return &ValidationError{Name: "sender", err: errors.New(`ent: missing required edge "Transaction.sender"`)}
+	}
+	if _, ok := tc.mutation.RecipientID(); !ok {
+		return &ValidationError{Name: "recipient", err: errors.New(`ent: missing required edge "Transaction.recipient"`)}
 	}
 	return nil
 }
@@ -205,20 +202,12 @@ func (tc *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 		_spec.SetField(transaction.FieldAmount, field.TypeFloat64, value)
 		_node.Amount = value
 	}
-	if value, ok := tc.mutation.Sender(); ok {
-		_spec.SetField(transaction.FieldSender, field.TypeInt, value)
-		_node.Sender = value
-	}
-	if value, ok := tc.mutation.Recipient(); ok {
-		_spec.SetField(transaction.FieldRecipient, field.TypeInt, value)
-		_node.Recipient = value
-	}
-	if nodes := tc.mutation.WalletIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.SenderIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   transaction.WalletTable,
-			Columns: []string{transaction.WalletColumn},
+			Table:   transaction.SenderTable,
+			Columns: []string{transaction.SenderColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -230,7 +219,27 @@ func (tc *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.wallet_transactions = &nodes[0]
+		_node.SenderID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.RecipientIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.RecipientTable,
+			Columns: []string{transaction.RecipientColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: wallet.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.RecipientID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
