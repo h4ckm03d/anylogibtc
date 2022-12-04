@@ -48,7 +48,7 @@
 #### Get all items
 
 ```http
-  POST /api/wallets/
+  POST /v1/wallets
 ```
 
 Request body:
@@ -58,21 +58,23 @@ Request body:
 | `datetime`  | `string`  | **Required**. ISODATE string |
 | `amount`    | `float64` | **Required**. btc amount     |
 
+```bash
+curl -X POST localhost:3000/v1/wallets  \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}'
+```
+
 #### Get history
 
 ```http
-  GET /api/wallets/{id}/history
+  GET /v1/wallets
 ```
 
 | Parameter       | Type     | Description                       |
 | :-------------- | :------- | :-------------------------------- |
-| `id`            | `string` | **Required**. Id of item to fetch |
 | `startDatetime` | `string` | **Required**. Start date time     |
 | `endDatetime`   | `string` | **Required**. End date time       |
-
-#### add(num1, num2)
-
-Takes two numbers and returns the sum.
 
 
 ## Authors

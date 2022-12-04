@@ -24,7 +24,7 @@ func TestSaveTransaction(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	trxService := &transactionfakes.FakeTransaction{}
+	trxService := &transactionfakes.FakeTransactionService{}
 	trxHandler := handler.NewTransactionHandler(trxService)
 	// Assertions
 	if assert.NoError(t, trxHandler.Save(c)) {
@@ -44,7 +44,7 @@ func TestSaveFailTransaction(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	trxService := &transactionfakes.FakeTransaction{}
+	trxService := &transactionfakes.FakeTransactionService{}
 	trxService.SendReturns(errors.New("ups error"))
 	trxHandler := handler.NewTransactionHandler(trxService)
 	// Assertions

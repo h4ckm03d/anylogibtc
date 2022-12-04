@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"anylogibtc/domain/wallet/pg"
+	"anylogibtc/services/transaction"
 	"context"
 	"fmt"
 	"net/http"
@@ -8,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 )
@@ -19,19 +22,28 @@ type Server interface {
 type EchoServer struct {
 	e    *echo.Echo
 	Port int
+	db   *pgxpool.Pool
 }
 
-func NewEchoServer(port int) *EchoServer {
+func NewEchoServer(port int, db *pgxpool.Pool) *EchoServer {
 	return &EchoServer{
 		e:    echo.New(),
 		Port: port,
+		db:   db,
 	}
 }
 
 func (s *EchoServer) SetupRoutes() {
+
+	transactionRepo := pg.NewPgTransaction(s.db)
+	transactionService := transaction.NewTransactionService(transactionRepo)
+	transactionHandler := NewTransactionHandler(transactionService)
+
 	g := s.e.Group("/v1")
 	// health check routes
 	g.GET("/healthz", Healthz)
+	g.POST("/wallets", transactionHandler.Save)
+	g.GET("/wallets", transactionHandler.History)
 }
 
 func (s *EchoServer) Run() {

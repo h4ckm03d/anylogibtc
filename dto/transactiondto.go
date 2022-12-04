@@ -13,6 +13,11 @@ type TransactionDTO struct {
 	Amount decimal.Decimal `json:"amount" `
 }
 
+type HistoryParamsDTO struct {
+	StartDatetime time.Time `json:"startDatetime"`
+	EndDatetime   time.Time `json:"endDatetime"`
+}
+
 type HistoryDTO struct {
 	// Datetime holds the value of the "datetime" field.
 	Datetime time.Time `json:"datetime"`
