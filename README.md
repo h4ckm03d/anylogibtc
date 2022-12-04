@@ -83,10 +83,10 @@ or run `make migrate` command
 
 Request body:
 
-| field       | Type      | Description                  |
-| :---------- | :-------- | :--------------------------- |
-| `datetime`  | `string`  | **Required**. ISODATE string |
-| `amount`    | `float64` | **Required**. btc amount     |
+| field      | Type      | Description                  |
+| :--------- | :-------- | :--------------------------- |
+| `datetime` | `string`  | **Required**. ISODATE string |
+| `amount`   | `float64` | **Required**. btc amount     |
 
 ```bash
 curl -X POST localhost:3000/v1/wallets  \
@@ -101,11 +101,36 @@ curl -X POST localhost:3000/v1/wallets  \
   GET /v1/wallets
 ```
 
-| Parameter       | Type     | Description                       |
-| :-------------- | :------- | :-------------------------------- |
-| `startDatetime` | `string` | **Required**. Start date time     |
-| `endDatetime`   | `string` | **Required**. End date time       |
+| Parameter       | Type     | Description                   |
+| :-------------- | :------- | :---------------------------- |
+| `startDatetime` | `string` | **Required**. Start date time |
+| `endDatetime`   | `string` | **Required**. End date time   |
 
+## Notes
+
+- Timescaledb used because I need continuous aggregations to speed up the calculation on each hour. For better understanding I put the migration script to create hypertable and materialized view.
+```sql
+SELECT
+  *
+FROM
+  create_hypertable(
+    'transactions',
+    'datetime',
+    chunk_time_interval => INTERVAL '1 hour'
+  );
+
+CREATE MATERIALIZED VIEW transaction_hourly
+WITH
+  (timescaledb.continuous) AS
+SELECT
+  time_bucket(INTERVAL '1 hour', datetime) AS hour,
+  SUM(amount) as total
+FROM
+  transactions
+GROUP BY
+  hour;
+
+```
 
 ## Authors
 
