@@ -110,6 +110,7 @@ curl -X POST localhost:3000/v1/wallets  \
 
 - Timescaledb used because I need continuous aggregations to speed up the calculation on each hour. For better understanding I put the migration script to create hypertable and materialized view.
 ```sql
+-- create hypertable on table transactions, before create this id and datetime must be indexed together as Primary key
 SELECT
   *
 FROM
@@ -119,6 +120,7 @@ FROM
     chunk_time_interval => INTERVAL '1 hour'
   );
 
+--
 CREATE MATERIALIZED VIEW transaction_hourly
 WITH
   (timescaledb.continuous) AS
@@ -129,7 +131,6 @@ FROM
   transactions
 GROUP BY
   hour;
-
 ```
 
 ## Authors
