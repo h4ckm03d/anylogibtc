@@ -1,38 +1,53 @@
 package transaction
 
-import (
-	"time"
+// You only need **one** of these per package!
+// see https://github.com/maxbrunsfeld/counterfeiter#step-2b---add-counterfeitergenerate-directives
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
-	"github.com/shopspring/decimal"
+import (
+	"anylogibtc/domain/wallet"
+	"anylogibtc/dto"
+	"context"
+	"time"
 )
 
-type TransactionDTO struct {
-	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime,omitempty"`
-	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount,omitempty"`
-	// SenderID holds the value of the "sender_id" field.
-	SenderID int `json:"sender_id,omitempty"`
-	// RecipientID holds the value of the "recipient_id" field.
-	RecipientID int `json:"recipient_id,omitempty"`
+type HistoriesDTO []dto.HistoryDTO
+
+//counterfeiter:generate . TransactionService
+type TransactionService interface {
+	Send(ctx context.Context, td dto.TransactionDTO) error
+	History(ctx context.Context, from time.Time, to time.Time) (HistoriesDTO, error)
 }
 
-type HistoryDTO struct {
-	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime,omitempty"`
-	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount,omitempty"`
+type transaction struct {
+	repo wallet.TransactionRepository
 }
 
-type HistoryParams struct {
-	WalletId int `json:"walletId,omitempty"`
-	From     time.Time
-	To       time.Time
+func NewTransactionService(repo wallet.TransactionRepository) TransactionService {
+	return &transaction{repo: repo}
 }
 
-type HistoriesDTO []HistoryDTO
+func (t *transaction) Send(ctx context.Context, td dto.TransactionDTO) error {
+	err := t.repo.Send(ctx, td)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-type Transaction interface {
-	Send(td TransactionDTO) error
-	History(p HistoryParams) HistoriesDTO
+func (t *transaction) History(ctx context.Context, from time.Time, to time.Time) (HistoriesDTO, error) {
+	histories, err := t.repo.History(ctx, from, to)
+	results := HistoriesDTO{}
+	if err != nil {
+		return results, err
+	}
+
+	for _, history := range histories {
+		results = append(results, dto.HistoryDTO{
+			Datetime: history.Datetime,
+			Amount:   history.Amount,
+		})
+	}
+
+	return results, nil
 }

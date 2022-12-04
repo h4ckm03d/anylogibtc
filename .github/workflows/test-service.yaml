@@ -1,0 +1,62 @@
+name: Test Service
+on: 
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/README.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**/README.md'
+
+jobs:
+  # Label of the container job
+  container-job:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: golang:latest
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        image: timescale/timescaledb:latest-pg13
+        env:
+          POSTGRES_USER: timescaledb
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: anylogi_test
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # Performs a clean installation of all dependencies
+      - name: Install dependencies
+        run: make dep
+
+      - name: Run migration
+        run: soda migrate -e test
+
+      - name: Run test
+        run: make test
+        env:
+          POSTGRES_HOST: postgres
