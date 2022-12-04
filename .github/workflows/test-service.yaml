@@ -8,6 +8,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '**.go'
 
 jobs:
   # Label of the container job
