@@ -5,13 +5,14 @@ package transaction
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 import (
-	"anylogibtc/domain/wallet"
 	"anylogibtc/dto"
+	"anylogibtc/repository"
 	"context"
+	"errors"
 	"time"
 )
 
-type HistoriesDTO []dto.HistoryDTO
+type HistoriesDTO []dto.TransactionDTO
 
 //counterfeiter:generate . TransactionService
 type TransactionService interface {
@@ -20,10 +21,10 @@ type TransactionService interface {
 }
 
 type transaction struct {
-	repo wallet.TransactionRepository
+	repo repository.TransactionRepository
 }
 
-func NewTransactionService(repo wallet.TransactionRepository) TransactionService {
+func NewTransactionService(repo repository.TransactionRepository) TransactionService {
 	return &transaction{repo: repo}
 }
 
@@ -36,18 +37,17 @@ func (t *transaction) Send(ctx context.Context, td dto.TransactionDTO) error {
 }
 
 func (t *transaction) History(ctx context.Context, from time.Time, to time.Time) (HistoriesDTO, error) {
-	histories, err := t.repo.History(ctx, from, to)
 	results := HistoriesDTO{}
+
+	if from.UTC().After(to.UTC()) {
+		return results, errors.New("from datetime cannot be after to datetime")
+	}
+
+	histories, err := t.repo.History(ctx, from.UTC(), to.UTC())
+
 	if err != nil {
 		return results, err
 	}
 
-	for _, history := range histories {
-		results = append(results, dto.HistoryDTO{
-			Datetime: history.Datetime,
-			Amount:   history.Amount,
-		})
-	}
-
-	return results, nil
+	return HistoriesDTO(histories), nil
 }

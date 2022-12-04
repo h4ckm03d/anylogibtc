@@ -18,13 +18,6 @@ type HistoryParamsDTO struct {
 	EndDatetime   time.Time `json:"endDatetime"`
 }
 
-type HistoryDTO struct {
-	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime"`
-	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount"`
-}
-
 type ResponseDTO struct {
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`

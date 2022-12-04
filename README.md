@@ -8,6 +8,7 @@
 - Docker is required for simple setup env using docker compose
 - Makefile to simplify command execution
 - Golang 1.19
+- [jq](https://stedolan.github.io/jq/) ( optional for better formatting output)
 
 ## Development
 
@@ -28,6 +29,52 @@ Or simply run `make dep` command.
 ```
 or run `make migrate` command
 
+### How to run and test
+
+Run command `go run cmd/main.go` to run application
+
+Run unit test
+```
+go test -mod=readonly -v ./... -covermode=count -coverprofile=profile.out && go tool cover -func=profile.out
+```
+
+or 
+
+```
+make test
+```
+example output
+```
+❯ make test
+go test -mod=readonly -v ./... -covermode=count -coverprofile=profile.out && go tool cover -func=profile.out
+=== RUN   TestHealthz
+--- PASS: TestHealthz (0.00s)
+=== RUN   TestSaveTransaction
+--- PASS: TestSaveTransaction (0.00s)
+=== RUN   TestSaveFailTransaction
+--- PASS: TestSaveFailTransaction (0.00s)
+=== RUN   TestGetHistory
+--- PASS: TestGetHistory (0.00s)
+PASS
+coverage: 57.4% of statements
+ok      anylogibtc/api/handler  0.003s  coverage: 57.4% of statements
+?       anylogibtc/cmd  [no test files]
+?       anylogibtc/dto  [no test files]
+?       anylogibtc/entity       [no test files]
+?       anylogibtc/repository   [no test files]
+?       anylogibtc/repository/pg        [no test files]
+?       anylogibtc/repository/repositoryfakes   [no test files]
+?       anylogibtc/services/transaction [no test files]
+?       anylogibtc/services/transaction/transactionfakes    [no test files]
+anylogibtc/api/handler/server.go:28:            NewEchoServer0.0%
+anylogibtc/api/handler/server.go:36:            SetupRoutes 0.0%
+anylogibtc/api/handler/server.go:49:            Run         0.0%
+anylogibtc/api/handler/server.go:73:            Healthz     100.0%
+anylogibtc/api/handler/transaction.go:18:       NewTransactionHandler        100.0%
+anylogibtc/api/handler/transaction.go:25:       Save        100.0%
+anylogibtc/api/handler/transaction.go:46:       History     100.0%
+```
+
 ## Directory structure
 
 ```
@@ -45,14 +92,13 @@ or run `make migrate` command
 │   └── main.go
 ├── database.yml
 ├── docker-compose.yml
-├── domain
-│   └── wallet
-│       ├── pg
-│       │   └── transaction.go
-│       ├── repository.go
-│       ├── transaction.go
-│       └── walletfakes
-│           └── fake_transaction_repository.go
+├── repository
+│   ├── pg
+│   │   └── transaction.go
+│   ├── repository.go
+│   ├── transaction.go
+│   └── walletfakes
+│       └── fake_transaction_repository.go
 ├── dto
 ├── entity
 ├── migrations
@@ -88,11 +134,16 @@ Request body:
 | `datetime` | `string`  | **Required**. ISODATE string |
 | `amount`   | `float64` | **Required**. btc amount     |
 
+Examples:
 ```bash
 curl -X POST localhost:3000/v1/wallets  \
 -H "Accept: application/json" \
 -H "Content-Type: application/json" \
 -d '{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}'
+```
+
+Results:
+```
 ```
 
 #### Get history
@@ -106,6 +157,18 @@ curl -X POST localhost:3000/v1/wallets  \
 | `startDatetime` | `string` | **Required**. Start date time |
 | `endDatetime`   | `string` | **Required**. End date time   |
 
+The result history will be in UTC format
+Examples:
+```bash
+curl "localhost:3000/v1/wallets?startDatetime=2011-10-05T10:48:01+00:00&endDatetime=2011-10-05T18:48:02+00:00" | jq
+
+[
+  {
+    "datetime": "2022-12-04T14:00:00Z",
+    "amount": "14"
+  }
+]
+```
 ## Notes
 
 - Timescaledb used because I need continuous aggregations to speed up the calculation on each hour. For better understanding I put the migration script to create hypertable and materialized view.

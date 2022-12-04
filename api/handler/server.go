@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"anylogibtc/domain/wallet/pg"
+	"anylogibtc/repository/pg"
 	"anylogibtc/services/transaction"
 	"context"
 	"fmt"
