@@ -2,26 +2,34 @@
 package transactionfakes
 
 import (
+	"anylogibtc/dto"
 	"anylogibtc/services/transaction"
+	"context"
 	"sync"
+	"time"
 )
 
-type FakeTransaction struct {
-	HistoryStub        func(transaction.HistoryParams) transaction.HistoriesDTO
+type FakeTransactionService struct {
+	HistoryStub        func(context.Context, time.Time, time.Time) (transaction.HistoriesDTO, error)
 	historyMutex       sync.RWMutex
 	historyArgsForCall []struct {
-		arg1 transaction.HistoryParams
+		arg1 context.Context
+		arg2 time.Time
+		arg3 time.Time
 	}
 	historyReturns struct {
 		result1 transaction.HistoriesDTO
+		result2 error
 	}
 	historyReturnsOnCall map[int]struct {
 		result1 transaction.HistoriesDTO
+		result2 error
 	}
-	SendStub        func(transaction.TransactionDTO) error
+	SendStub        func(context.Context, dto.TransactionDTO) error
 	sendMutex       sync.RWMutex
 	sendArgsForCall []struct {
-		arg1 transaction.TransactionDTO
+		arg1 context.Context
+		arg2 dto.TransactionDTO
 	}
 	sendReturns struct {
 		result1 error
@@ -33,79 +41,85 @@ type FakeTransaction struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTransaction) History(arg1 transaction.HistoryParams) transaction.HistoriesDTO {
+func (fake *FakeTransactionService) History(arg1 context.Context, arg2 time.Time, arg3 time.Time) (transaction.HistoriesDTO, error) {
 	fake.historyMutex.Lock()
 	ret, specificReturn := fake.historyReturnsOnCall[len(fake.historyArgsForCall)]
 	fake.historyArgsForCall = append(fake.historyArgsForCall, struct {
-		arg1 transaction.HistoryParams
-	}{arg1})
+		arg1 context.Context
+		arg2 time.Time
+		arg3 time.Time
+	}{arg1, arg2, arg3})
 	stub := fake.HistoryStub
 	fakeReturns := fake.historyReturns
-	fake.recordInvocation("History", []interface{}{arg1})
+	fake.recordInvocation("History", []interface{}{arg1, arg2, arg3})
 	fake.historyMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fakeReturns.result1
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeTransaction) HistoryCallCount() int {
+func (fake *FakeTransactionService) HistoryCallCount() int {
 	fake.historyMutex.RLock()
 	defer fake.historyMutex.RUnlock()
 	return len(fake.historyArgsForCall)
 }
 
-func (fake *FakeTransaction) HistoryCalls(stub func(transaction.HistoryParams) transaction.HistoriesDTO) {
+func (fake *FakeTransactionService) HistoryCalls(stub func(context.Context, time.Time, time.Time) (transaction.HistoriesDTO, error)) {
 	fake.historyMutex.Lock()
 	defer fake.historyMutex.Unlock()
 	fake.HistoryStub = stub
 }
 
-func (fake *FakeTransaction) HistoryArgsForCall(i int) transaction.HistoryParams {
+func (fake *FakeTransactionService) HistoryArgsForCall(i int) (context.Context, time.Time, time.Time) {
 	fake.historyMutex.RLock()
 	defer fake.historyMutex.RUnlock()
 	argsForCall := fake.historyArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeTransaction) HistoryReturns(result1 transaction.HistoriesDTO) {
+func (fake *FakeTransactionService) HistoryReturns(result1 transaction.HistoriesDTO, result2 error) {
 	fake.historyMutex.Lock()
 	defer fake.historyMutex.Unlock()
 	fake.HistoryStub = nil
 	fake.historyReturns = struct {
 		result1 transaction.HistoriesDTO
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeTransaction) HistoryReturnsOnCall(i int, result1 transaction.HistoriesDTO) {
+func (fake *FakeTransactionService) HistoryReturnsOnCall(i int, result1 transaction.HistoriesDTO, result2 error) {
 	fake.historyMutex.Lock()
 	defer fake.historyMutex.Unlock()
 	fake.HistoryStub = nil
 	if fake.historyReturnsOnCall == nil {
 		fake.historyReturnsOnCall = make(map[int]struct {
 			result1 transaction.HistoriesDTO
+			result2 error
 		})
 	}
 	fake.historyReturnsOnCall[i] = struct {
 		result1 transaction.HistoriesDTO
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeTransaction) Send(arg1 transaction.TransactionDTO) error {
+func (fake *FakeTransactionService) Send(arg1 context.Context, arg2 dto.TransactionDTO) error {
 	fake.sendMutex.Lock()
 	ret, specificReturn := fake.sendReturnsOnCall[len(fake.sendArgsForCall)]
 	fake.sendArgsForCall = append(fake.sendArgsForCall, struct {
-		arg1 transaction.TransactionDTO
-	}{arg1})
+		arg1 context.Context
+		arg2 dto.TransactionDTO
+	}{arg1, arg2})
 	stub := fake.SendStub
 	fakeReturns := fake.sendReturns
-	fake.recordInvocation("Send", []interface{}{arg1})
+	fake.recordInvocation("Send", []interface{}{arg1, arg2})
 	fake.sendMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -113,26 +127,26 @@ func (fake *FakeTransaction) Send(arg1 transaction.TransactionDTO) error {
 	return fakeReturns.result1
 }
 
-func (fake *FakeTransaction) SendCallCount() int {
+func (fake *FakeTransactionService) SendCallCount() int {
 	fake.sendMutex.RLock()
 	defer fake.sendMutex.RUnlock()
 	return len(fake.sendArgsForCall)
 }
 
-func (fake *FakeTransaction) SendCalls(stub func(transaction.TransactionDTO) error) {
+func (fake *FakeTransactionService) SendCalls(stub func(context.Context, dto.TransactionDTO) error) {
 	fake.sendMutex.Lock()
 	defer fake.sendMutex.Unlock()
 	fake.SendStub = stub
 }
 
-func (fake *FakeTransaction) SendArgsForCall(i int) transaction.TransactionDTO {
+func (fake *FakeTransactionService) SendArgsForCall(i int) (context.Context, dto.TransactionDTO) {
 	fake.sendMutex.RLock()
 	defer fake.sendMutex.RUnlock()
 	argsForCall := fake.sendArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeTransaction) SendReturns(result1 error) {
+func (fake *FakeTransactionService) SendReturns(result1 error) {
 	fake.sendMutex.Lock()
 	defer fake.sendMutex.Unlock()
 	fake.SendStub = nil
@@ -141,7 +155,7 @@ func (fake *FakeTransaction) SendReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeTransaction) SendReturnsOnCall(i int, result1 error) {
+func (fake *FakeTransactionService) SendReturnsOnCall(i int, result1 error) {
 	fake.sendMutex.Lock()
 	defer fake.sendMutex.Unlock()
 	fake.SendStub = nil
@@ -155,7 +169,7 @@ func (fake *FakeTransaction) SendReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeTransaction) Invocations() map[string][][]interface{} {
+func (fake *FakeTransactionService) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.historyMutex.RLock()
@@ -169,7 +183,7 @@ func (fake *FakeTransaction) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeTransaction) recordInvocation(key string, args []interface{}) {
+func (fake *FakeTransactionService) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -181,4 +195,4 @@ func (fake *FakeTransaction) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ transaction.Transaction = new(FakeTransaction)
+var _ transaction.TransactionService = new(FakeTransactionService)

@@ -57,8 +57,6 @@ Request body:
 | :---------- | :-------- | :--------------------------- |
 | `datetime`  | `string`  | **Required**. ISODATE string |
 | `amount`    | `float64` | **Required**. btc amount     |
-| `sender`    | `int`     | **Required**. id sender      |
-| `recipient` | `int`     | **Required**. btc recipient  |
 
 #### Get history
 

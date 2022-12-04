@@ -5,35 +5,49 @@ package transaction
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 import (
+	"anylogibtc/domain/wallet"
+	"anylogibtc/dto"
+	"context"
 	"time"
-
-	"github.com/shopspring/decimal"
 )
 
-type TransactionDTO struct {
-	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime" `
-	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount" `
+type HistoriesDTO []dto.HistoryDTO
+
+//counterfeiter:generate . TransactionService
+type TransactionService interface {
+	Send(ctx context.Context, td dto.TransactionDTO) error
+	History(ctx context.Context, from time.Time, to time.Time) (HistoriesDTO, error)
 }
 
-type HistoryDTO struct {
-	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime"`
-	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount"`
+type transaction struct {
+	repo wallet.TransactionRepository
 }
 
-type HistoryParams struct {
-	WalletId int `json:"walletId,omitempty"`
-	From     time.Time
-	To       time.Time
+func NewTransactionService(repo wallet.TransactionRepository) TransactionService {
+	return &transaction{repo: repo}
 }
 
-type HistoriesDTO []HistoryDTO
+func (t *transaction) Send(ctx context.Context, td dto.TransactionDTO) error {
+	err := t.repo.Send(ctx, td)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-//counterfeiter:generate . Transaction
-type Transaction interface {
-	Send(td TransactionDTO) error
-	History(p HistoryParams) HistoriesDTO
+func (t *transaction) History(ctx context.Context, from time.Time, to time.Time) (HistoriesDTO, error) {
+	histories, err := t.repo.History(ctx, from, to)
+	results := HistoriesDTO{}
+	if err != nil {
+		return results, err
+	}
+
+	for _, history := range histories {
+		results = append(results, dto.HistoryDTO{
+			Datetime: history.Datetime,
+			Amount:   history.Amount,
+		})
+	}
+
+	return results, nil
 }

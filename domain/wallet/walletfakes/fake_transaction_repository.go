@@ -3,17 +3,20 @@ package walletfakes
 
 import (
 	"anylogibtc/domain/wallet"
+	"anylogibtc/dto"
 	"anylogibtc/entity"
 	"context"
 	"sync"
+	"time"
 )
 
 type FakeTransactionRepository struct {
-	HistoryStub        func(context.Context, int) ([]entity.Transaction, error)
+	HistoryStub        func(context.Context, time.Time, time.Time) ([]entity.Transaction, error)
 	historyMutex       sync.RWMutex
 	historyArgsForCall []struct {
 		arg1 context.Context
-		arg2 int
+		arg2 time.Time
+		arg3 time.Time
 	}
 	historyReturns struct {
 		result1 []entity.Transaction
@@ -23,11 +26,11 @@ type FakeTransactionRepository struct {
 		result1 []entity.Transaction
 		result2 error
 	}
-	SendStub        func(context.Context, entity.Transaction) error
+	SendStub        func(context.Context, dto.TransactionDTO) error
 	sendMutex       sync.RWMutex
 	sendArgsForCall []struct {
 		arg1 context.Context
-		arg2 entity.Transaction
+		arg2 dto.TransactionDTO
 	}
 	sendReturns struct {
 		result1 error
@@ -39,19 +42,20 @@ type FakeTransactionRepository struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTransactionRepository) History(arg1 context.Context, arg2 int) ([]entity.Transaction, error) {
+func (fake *FakeTransactionRepository) History(arg1 context.Context, arg2 time.Time, arg3 time.Time) ([]entity.Transaction, error) {
 	fake.historyMutex.Lock()
 	ret, specificReturn := fake.historyReturnsOnCall[len(fake.historyArgsForCall)]
 	fake.historyArgsForCall = append(fake.historyArgsForCall, struct {
 		arg1 context.Context
-		arg2 int
-	}{arg1, arg2})
+		arg2 time.Time
+		arg3 time.Time
+	}{arg1, arg2, arg3})
 	stub := fake.HistoryStub
 	fakeReturns := fake.historyReturns
-	fake.recordInvocation("History", []interface{}{arg1, arg2})
+	fake.recordInvocation("History", []interface{}{arg1, arg2, arg3})
 	fake.historyMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -65,17 +69,17 @@ func (fake *FakeTransactionRepository) HistoryCallCount() int {
 	return len(fake.historyArgsForCall)
 }
 
-func (fake *FakeTransactionRepository) HistoryCalls(stub func(context.Context, int) ([]entity.Transaction, error)) {
+func (fake *FakeTransactionRepository) HistoryCalls(stub func(context.Context, time.Time, time.Time) ([]entity.Transaction, error)) {
 	fake.historyMutex.Lock()
 	defer fake.historyMutex.Unlock()
 	fake.HistoryStub = stub
 }
 
-func (fake *FakeTransactionRepository) HistoryArgsForCall(i int) (context.Context, int) {
+func (fake *FakeTransactionRepository) HistoryArgsForCall(i int) (context.Context, time.Time, time.Time) {
 	fake.historyMutex.RLock()
 	defer fake.historyMutex.RUnlock()
 	argsForCall := fake.historyArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeTransactionRepository) HistoryReturns(result1 []entity.Transaction, result2 error) {
@@ -104,12 +108,12 @@ func (fake *FakeTransactionRepository) HistoryReturnsOnCall(i int, result1 []ent
 	}{result1, result2}
 }
 
-func (fake *FakeTransactionRepository) Send(arg1 context.Context, arg2 entity.Transaction) error {
+func (fake *FakeTransactionRepository) Send(arg1 context.Context, arg2 dto.TransactionDTO) error {
 	fake.sendMutex.Lock()
 	ret, specificReturn := fake.sendReturnsOnCall[len(fake.sendArgsForCall)]
 	fake.sendArgsForCall = append(fake.sendArgsForCall, struct {
 		arg1 context.Context
-		arg2 entity.Transaction
+		arg2 dto.TransactionDTO
 	}{arg1, arg2})
 	stub := fake.SendStub
 	fakeReturns := fake.sendReturns
@@ -130,13 +134,13 @@ func (fake *FakeTransactionRepository) SendCallCount() int {
 	return len(fake.sendArgsForCall)
 }
 
-func (fake *FakeTransactionRepository) SendCalls(stub func(context.Context, entity.Transaction) error) {
+func (fake *FakeTransactionRepository) SendCalls(stub func(context.Context, dto.TransactionDTO) error) {
 	fake.sendMutex.Lock()
 	defer fake.sendMutex.Unlock()
 	fake.SendStub = stub
 }
 
-func (fake *FakeTransactionRepository) SendArgsForCall(i int) (context.Context, entity.Transaction) {
+func (fake *FakeTransactionRepository) SendArgsForCall(i int) (context.Context, dto.TransactionDTO) {
 	fake.sendMutex.RLock()
 	defer fake.sendMutex.RUnlock()
 	argsForCall := fake.sendArgsForCall[i]

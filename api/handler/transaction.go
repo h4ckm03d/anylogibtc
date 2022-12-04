@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"anylogibtc/dto"
 	"anylogibtc/services/transaction"
 	"net/http"
 
@@ -9,10 +10,10 @@ import (
 )
 
 type TransactionHandler struct {
-	serviceTransaction transaction.Transaction
+	serviceTransaction transaction.TransactionService
 }
 
-func NewTransactionHandler(serviceTransaction transaction.Transaction) *TransactionHandler {
+func NewTransactionHandler(serviceTransaction transaction.TransactionService) *TransactionHandler {
 
 	return &TransactionHandler{
 		serviceTransaction: serviceTransaction,
@@ -20,20 +21,20 @@ func NewTransactionHandler(serviceTransaction transaction.Transaction) *Transact
 }
 
 func (t *TransactionHandler) Save(c echo.Context) error {
-	input := new(transaction.TransactionDTO)
+	input := new(dto.TransactionDTO)
 	if err := c.Bind(input); err != nil {
-		return c.JSON(http.StatusBadRequest, ResponseDTO{Error: err.Error()})
+		return c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
 	}
 
 	if input.Amount.Equal(decimal.NewFromInt(0)) {
-		return c.JSON(http.StatusBadRequest, ResponseDTO{Error: "amount can't be 0"})
+		return c.JSON(http.StatusBadRequest, dto.NewResponse("", "amount can't be 0"))
 	}
 
-	if err := t.serviceTransaction.Send(*input); err != nil {
-		return c.JSON(http.StatusBadRequest, ResponseDTO{Error: err.Error()})
+	if err := t.serviceTransaction.Send(c.Request().Context(), *input); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
 	}
 
-	return c.JSON(http.StatusCreated, ResponseDTO{Message: "data created successfully"})
+	return c.JSON(http.StatusCreated, dto.NewResponse("data created successfully", ""))
 }
 
 func (t *TransactionHandler) History(ctx echo.Context) error {
