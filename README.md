@@ -8,6 +8,7 @@
 - Docker is required for simple setup env using docker compose
 - Makefile to simplify command execution
 - Golang 1.19
+- [jq](https://stedolan.github.io/jq/) ( optional for better formatting output)
 
 ## Development
 
@@ -45,14 +46,13 @@ or run `make migrate` command
 │   └── main.go
 ├── database.yml
 ├── docker-compose.yml
-├── domain
-│   └── wallet
-│       ├── pg
-│       │   └── transaction.go
-│       ├── repository.go
-│       ├── transaction.go
-│       └── walletfakes
-│           └── fake_transaction_repository.go
+├── repository
+│   ├── pg
+│   │   └── transaction.go
+│   ├── repository.go
+│   ├── transaction.go
+│   └── walletfakes
+│       └── fake_transaction_repository.go
 ├── dto
 ├── entity
 ├── migrations
@@ -88,11 +88,16 @@ Request body:
 | `datetime` | `string`  | **Required**. ISODATE string |
 | `amount`   | `float64` | **Required**. btc amount     |
 
+Examples:
 ```bash
 curl -X POST localhost:3000/v1/wallets  \
 -H "Accept: application/json" \
 -H "Content-Type: application/json" \
 -d '{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}'
+```
+
+Results:
+```
 ```
 
 #### Get history
@@ -106,6 +111,18 @@ curl -X POST localhost:3000/v1/wallets  \
 | `startDatetime` | `string` | **Required**. Start date time |
 | `endDatetime`   | `string` | **Required**. End date time   |
 
+The result history will be in UTC format
+Examples:
+```bash
+curl "localhost:3000/v1/wallets?startDatetime=2011-10-05T10:48:01+00:00&endDatetime=2011-10-05T18:48:02+00:00" | jq
+
+[
+  {
+    "datetime": "2022-12-04T14:00:00Z",
+    "amount": "14"
+  }
+]
+```
 ## Notes
 
 - Timescaledb used because I need continuous aggregations to speed up the calculation on each hour. For better understanding I put the migration script to create hypertable and materialized view.

@@ -3,7 +3,9 @@ package handler
 import (
 	"anylogibtc/dto"
 	"anylogibtc/services/transaction"
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shopspring/decimal"
@@ -23,20 +25,47 @@ func NewTransactionHandler(serviceTransaction transaction.TransactionService) *T
 func (t *TransactionHandler) Save(c echo.Context) error {
 	input := new(dto.TransactionDTO)
 	if err := c.Bind(input); err != nil {
-		return c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		return err
 	}
 
 	if input.Amount.Equal(decimal.NewFromInt(0)) {
-		return c.JSON(http.StatusBadRequest, dto.NewResponse("", "amount can't be 0"))
+		err := errors.New("amount can't be 0")
+		c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		return err
 	}
 
 	if err := t.serviceTransaction.Send(c.Request().Context(), *input); err != nil {
-		return c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		c.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		return err
 	}
 
 	return c.JSON(http.StatusCreated, dto.NewResponse("data created successfully", ""))
 }
 
 func (t *TransactionHandler) History(ctx echo.Context) error {
-	return nil
+	params := new(dto.HistoryParamsDTO)
+	if err := echo.QueryParamsBinder(ctx).
+		Time("startDatetime", &params.StartDatetime, time.RFC3339).
+		Time("endDatetime", &params.EndDatetime, time.RFC3339).
+		BindError(); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		return err
+	}
+
+	if params.StartDatetime.IsZero() {
+		params.StartDatetime = time.Now().Add(time.Hour * -1)
+	}
+
+	if params.EndDatetime.IsZero() {
+		params.EndDatetime = time.Now()
+	}
+
+	res, err := t.serviceTransaction.History(ctx.Request().Context(), params.StartDatetime, params.EndDatetime)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
+		return err
+	}
+	return ctx.JSON(http.StatusOK, res)
 }
