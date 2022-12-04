@@ -29,6 +29,52 @@ Or simply run `make dep` command.
 ```
 or run `make migrate` command
 
+### How to run and test
+
+Run command `go run cmd/main.go` to run application
+
+Run unit test
+```
+go test -mod=readonly -v ./... -covermode=count -coverprofile=profile.out && go tool cover -func=profile.out
+```
+
+or 
+
+```
+make test
+```
+example output
+```
+❯ make test
+go test -mod=readonly -v ./... -covermode=count -coverprofile=profile.out && go tool cover -func=profile.out
+=== RUN   TestHealthz
+--- PASS: TestHealthz (0.00s)
+=== RUN   TestSaveTransaction
+--- PASS: TestSaveTransaction (0.00s)
+=== RUN   TestSaveFailTransaction
+--- PASS: TestSaveFailTransaction (0.00s)
+=== RUN   TestGetHistory
+--- PASS: TestGetHistory (0.00s)
+PASS
+coverage: 57.4% of statements
+ok      anylogibtc/api/handler  0.003s  coverage: 57.4% of statements
+?       anylogibtc/cmd  [no test files]
+?       anylogibtc/dto  [no test files]
+?       anylogibtc/entity       [no test files]
+?       anylogibtc/repository   [no test files]
+?       anylogibtc/repository/pg        [no test files]
+?       anylogibtc/repository/repositoryfakes   [no test files]
+?       anylogibtc/services/transaction [no test files]
+?       anylogibtc/services/transaction/transactionfakes    [no test files]
+anylogibtc/api/handler/server.go:28:            NewEchoServer0.0%
+anylogibtc/api/handler/server.go:36:            SetupRoutes 0.0%
+anylogibtc/api/handler/server.go:49:            Run         0.0%
+anylogibtc/api/handler/server.go:73:            Healthz     100.0%
+anylogibtc/api/handler/transaction.go:18:       NewTransactionHandler        100.0%
+anylogibtc/api/handler/transaction.go:25:       Save        100.0%
+anylogibtc/api/handler/transaction.go:46:       History     100.0%
+```
+
 ## Directory structure
 
 ```
