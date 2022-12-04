@@ -31,7 +31,9 @@ or run `make migrate` command
 
 ### How to run and test
 
-Run command `go run cmd/main.go` to run application
+Run command `go run cmd/main.go` to run application.
+
+If you are using custom database url please specify `DATABASE_URL` on environment variable. By default it will use setting on docker compose
 
 Run unit test
 ```
