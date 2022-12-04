@@ -1,31 +1,26 @@
 package pg
 
 import (
-	"anylogibtc/ent"
+	"anylogibtc/entity"
 	"context"
-	"database/sql"
 
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PgTransaction struct {
-	client *ent.Client
+	dbpool *pgxpool.Pool
 }
 
-func NewPgTransaction(ctx context.Context, db *sql.DB) *PgTransaction {
-	// Create an ent.Driver from `db`.
-	drv := entsql.OpenDB(dialect.Postgres, db)
-
+func NewPgTransaction(ctx context.Context, db *pgxpool.Pool) *PgTransaction {
 	return &PgTransaction{
-		client: ent.NewClient(ent.Driver(drv)),
+		dbpool: db,
 	}
 }
 
-func (pt *PgTransaction) Send(ctx context.Context, t ent.Transaction) error {
+func (pt *PgTransaction) Send(ctx context.Context, t entity.Transaction) error {
 	return nil
 }
 
-func (pt *PgTransaction) History(ctx context.Context, id int) ([]ent.Transaction, error) {
+func (pt *PgTransaction) History(ctx context.Context, id int) ([]entity.Transaction, error) {
 	return nil, nil
 }

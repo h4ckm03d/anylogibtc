@@ -29,8 +29,9 @@ func NewEchoServer(port int) *EchoServer {
 }
 
 func (s *EchoServer) SetupRoutes() {
+	g := s.e.Group("/v1")
 	// health check routes
-	s.e.GET("/healthz", Healthz)
+	g.GET("/healthz", Healthz)
 }
 
 func (s *EchoServer) Run() {

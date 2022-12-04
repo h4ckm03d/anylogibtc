@@ -1,5 +1,9 @@
 package transaction
 
+// You only need **one** of these per package!
+// see https://github.com/maxbrunsfeld/counterfeiter#step-2b---add-counterfeitergenerate-directives
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+
 import (
 	"time"
 
@@ -8,20 +12,16 @@ import (
 
 type TransactionDTO struct {
 	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime,omitempty"`
+	Datetime time.Time `json:"datetime" `
 	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount,omitempty"`
-	// SenderID holds the value of the "sender_id" field.
-	SenderID int `json:"sender_id,omitempty"`
-	// RecipientID holds the value of the "recipient_id" field.
-	RecipientID int `json:"recipient_id,omitempty"`
+	Amount decimal.Decimal `json:"amount" `
 }
 
 type HistoryDTO struct {
 	// Datetime holds the value of the "datetime" field.
-	Datetime time.Time `json:"datetime,omitempty"`
+	Datetime time.Time `json:"datetime"`
 	// Amount holds the value of the "amount" field.
-	Amount decimal.Decimal `json:"amount,omitempty"`
+	Amount decimal.Decimal `json:"amount"`
 }
 
 type HistoryParams struct {
@@ -32,6 +32,7 @@ type HistoryParams struct {
 
 type HistoriesDTO []HistoryDTO
 
+//counterfeiter:generate . Transaction
 type Transaction interface {
 	Send(td TransactionDTO) error
 	History(p HistoryParams) HistoriesDTO

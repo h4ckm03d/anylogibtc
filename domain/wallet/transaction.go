@@ -1,7 +1,7 @@
 package wallet
 
 import (
-	"anylogibtc/ent"
+	"anylogibtc/entity"
 	"context"
 )
 
@@ -9,6 +9,6 @@ import (
 //
 //counterfeiter:generate . TransactionRepository
 type TransactionRepository interface {
-	Send(ctx context.Context, transaction ent.Transaction) error
-	History(ctx context.Context, id int) ([]ent.Transaction, error)
+	Send(ctx context.Context, transaction entity.Transaction) error
+	History(ctx context.Context, id int) ([]entity.Transaction, error)
 }
