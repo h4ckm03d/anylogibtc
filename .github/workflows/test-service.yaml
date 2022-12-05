@@ -20,7 +20,7 @@ jobs:
     container: golang:latest
 
     # # Service containers to run with `container-job`
-    # this is for integration testing purposes, will enable if integration test added
+    # this is for integration testing purposes
     services:
       # Label used to access the service container
       postgres:
@@ -29,8 +29,6 @@ jobs:
           POSTGRES_USER: timescaledb
           POSTGRES_PASSWORD: secret
           POSTGRES_DB: anylogi_test
-        volumes:
-        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -51,7 +49,14 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-
+      - name: Install PostgreSQL client
+        run: |
+          apt-get update
+          apt-get install --yes postgresql-client
+      - name: Migrate
+        run: psql -h postgres -d anylogi_test -U timescaledb a -f init.sql'
+        env:
+          PGPASSWORD: secret
       # Performs a clean installation of all dependencies
       - name: Install dependencies
         run: make dep
