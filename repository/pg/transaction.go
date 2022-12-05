@@ -1,9 +1,10 @@
 package pg
 
 import (
-	"anylogibtc/dto"
 	"context"
 	"time"
+
+	"anylogibtc/dto"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
@@ -49,7 +50,6 @@ func (pt *PgTransaction) History(ctx context.Context, from time.Time, to time.Ti
 	AND dt < $2`
 
 	rows, err := pt.dbpool.Query(ctx, query, from, to)
-
 	if err != nil {
 		return results, err
 	}

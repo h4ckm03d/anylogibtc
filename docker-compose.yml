@@ -10,3 +10,5 @@ services:
       POSTGRES_USER: timescaledb
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: anylogi
+    volumes:
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql

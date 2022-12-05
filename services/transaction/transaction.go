@@ -5,11 +5,12 @@ package transaction
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 import (
-	"anylogibtc/dto"
-	"anylogibtc/repository"
 	"context"
 	"errors"
 	"time"
+
+	"anylogibtc/dto"
+	"anylogibtc/repository"
 )
 
 type HistoriesDTO []dto.TransactionDTO
@@ -44,7 +45,6 @@ func (t *transaction) History(ctx context.Context, from time.Time, to time.Time)
 	}
 
 	histories, err := t.repo.History(ctx, from.UTC(), to.UTC())
-
 	if err != nil {
 		return results, err
 	}

@@ -5,9 +5,10 @@ package repository
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 import (
-	"anylogibtc/dto"
 	"context"
 	"time"
+
+	"anylogibtc/dto"
 )
 
 // Transaction is the repository interface to fulfill to use the wallet aggregate

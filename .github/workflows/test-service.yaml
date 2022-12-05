@@ -19,7 +19,8 @@ jobs:
     # Docker Hub image that `container-job` executes in
     container: golang:latest
 
-    # Service containers to run with `container-job`
+    # # Service containers to run with `container-job`
+    # this is for integration testing purposes, will enable if integration test added
     services:
       # Label used to access the service container
       postgres:
@@ -28,6 +29,8 @@ jobs:
           POSTGRES_USER: timescaledb
           POSTGRES_PASSWORD: secret
           POSTGRES_DB: anylogi_test
+        volumes:
+        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -57,6 +60,6 @@ jobs:
         run: soda migrate -e test
 
       - name: Run test
-        run: make test
+        run: make integration-test
         env:
-          POSTGRES_HOST: postgres
+          DATABASE_URL: postgres://timescaledb:secret@postgres:5432/anylogi_test?sslmode=disable

@@ -1,10 +1,6 @@
 package handler_test
 
 import (
-	"anylogibtc/api/handler"
-	"anylogibtc/dto"
-	"anylogibtc/services/transaction"
-	"anylogibtc/services/transaction/transactionfakes"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -13,15 +9,18 @@ import (
 	"testing"
 	"time"
 
+	"anylogibtc/api/handler"
+	"anylogibtc/dto"
+	"anylogibtc/services/transaction"
+	"anylogibtc/services/transaction/transactionfakes"
+
 	"github.com/labstack/echo/v4"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSaveTransaction(t *testing.T) {
-	var (
-		saveJSON = `{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}`
-	)
+	saveJSON := `{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}`
 
 	// Setup
 	e := echo.New()
@@ -39,9 +38,7 @@ func TestSaveTransaction(t *testing.T) {
 }
 
 func TestSaveFailTransaction(t *testing.T) {
-	var (
-		saveJSON = `{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}`
-	)
+	saveJSON := `{"datetime": "2019-10-05T14:45:05+07:00","amount": 10}`
 
 	// Setup
 	e := echo.New()
@@ -76,13 +73,13 @@ func TestSaveFailTransaction(t *testing.T) {
 	if assert.Error(t, trxHandler.Save(c1)) {
 		assert.Equal(t, http.StatusBadRequest, recInvalidObject.Code)
 	}
-
 }
 
 func TestGetHistory(t *testing.T) {
+	paramsHistory := `{"startDatetime":"2011-10-05T10:48:01+00:00","endDatetime":"2011-10-05T18:48:02+00:00"}`
 	// Setup
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/v1/wallets", nil)
+	req := httptest.NewRequest(http.MethodPost, "/v1/wallets/history", strings.NewReader(paramsHistory))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -98,7 +95,17 @@ func TestGetHistory(t *testing.T) {
 		assert.JSONEq(t, string(rawJson), rec.Body.String())
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/v1/wallets?startDatetime=jho92", nil)
+	req = httptest.NewRequest(http.MethodPost, "/v1/wallets/history", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	// Assertions
+	if assert.NoError(t, trxHandler.History(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.JSONEq(t, string(rawJson), rec.Body.String())
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/v1/wallets/history", strings.NewReader("as{"))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
@@ -107,7 +114,7 @@ func TestGetHistory(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/v1/wallets", nil)
+	req = httptest.NewRequest(http.MethodPost, "/v1/wallets/history", strings.NewReader(paramsHistory))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)

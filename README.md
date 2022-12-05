@@ -14,7 +14,9 @@
 
 ### Setup development environment
 
-- Run `docker compose up -d` to setup environment 
+- Run `docker compose up -d` to setup environment
+- Migration script automatically run when running docker compose up. All migration on the `init.sql`
+
 
 - Install dependencies
 ```cmd
@@ -23,11 +25,6 @@ go install -tags sqlite github.com/gobuffalo/pop/v6/soda@latest
 ```
 Or simply run `make dep` command.
 
-- Run migration database using `soda`
-```
-	soda migrate -e development
-```
-or run `make migrate` command
 
 ### How to run and test
 
@@ -151,10 +148,10 @@ Results:
 #### Get history
 
 ```http
-  GET /v1/wallets
+  POST /v1/wallets/history
 ```
-
-| Parameter       | Type     | Description                   |
+Request body:
+| Field           | Type     | Description                   |
 | :-------------- | :------- | :---------------------------- |
 | `startDatetime` | `string` | **Required**. Start date time |
 | `endDatetime`   | `string` | **Required**. End date time   |
@@ -162,7 +159,10 @@ Results:
 The result history will be in UTC format
 Examples:
 ```bash
-curl "localhost:3000/v1/wallets?startDatetime=2011-10-05T10:48:01+00:00&endDatetime=2011-10-05T18:48:02+00:00" | jq
+curl -X POST "localhost:3000/v1/wallets/history" \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"startDatetime":"2022-12-05T02:45:05+07:00","endDatetime":"2022-12-05T07:45:05+07:00"}'
 
 [
   {
@@ -196,6 +196,57 @@ FROM
   transactions
 GROUP BY
   hour;
+```
+
+## Examples run
+```bash
+curl -X POST localhost:3000/v1/wallets  \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"datetime": "2022-12-05T07:45:05+07:00","amount": 10}'
+{"message":"data created successfully"}
+
+curl -X POST "localhost:3000/v1/wallets/history" \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"startDatetime":"2022-12-05T02:45:05+07:00","endDatetime":"2022-12-05T07:45:05+07:00"}'
+[{"datetime":"2022-12-05T00:00:00Z","amount":"10"}]
+
+curl -X POST localhost:3000/v1/wallets  \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"datetime": "2022-12-05T07:45:06+07:00","amount": 2}' 
+{"message":"data created successfully"}
+
+curl -X POST localhost:3000/v1/wallets  \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"datetime": "2022-12-05T07:45:05+07:00","amount": 2}' 
+{"message":"data created successfully"}
+
+curl -X POST "localhost:3000/v1/wallets/history" \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"startDatetime":"2022-12-05T02:45:05+07:00","endDatetime":"2022-12-05T07:45:05+07:00"}'
+[{"datetime":"2022-12-05T00:00:00Z","amount":"14"}]
+
+curl -X POST localhost:3000/v1/wallets  \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"datetime": "2022-12-05T07:45:05+07:00","amount": 10}'
+{"message":"data created successfully"}
+
+curl -X POST localhost:3000/v1/wallets  \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"datetime": "2022-12-05T08:45:05+07:00","amount": 1.32}'
+{"message":"data created successfully"}
+
+curl -X POST "localhost:3000/v1/wallets/history" \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-d '{"startDatetime":"2022-12-05T02:45:05+07:00","endDatetime":"2022-12-05T09:45:05+07:00"}'
+[{"datetime":"2022-12-05T00:00:00Z","amount":"24"},{"datetime":"2022-12-05T01:00:00Z","amount":"25.32"}]
 ```
 
 ## Authors
