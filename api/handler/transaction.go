@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"anylogibtc/dto"
-	"anylogibtc/services/transaction"
 	"errors"
 	"net/http"
 	"time"
+
+	"anylogibtc/dto"
+	"anylogibtc/services/transaction"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shopspring/decimal"
@@ -16,7 +17,6 @@ type TransactionHandler struct {
 }
 
 func NewTransactionHandler(serviceTransaction transaction.TransactionService) *TransactionHandler {
-
 	return &TransactionHandler{
 		serviceTransaction: serviceTransaction,
 	}
@@ -45,10 +45,7 @@ func (t *TransactionHandler) Save(c echo.Context) error {
 
 func (t *TransactionHandler) History(ctx echo.Context) error {
 	params := new(dto.HistoryParamsDTO)
-	if err := echo.QueryParamsBinder(ctx).
-		Time("startDatetime", &params.StartDatetime, time.RFC3339).
-		Time("endDatetime", &params.EndDatetime, time.RFC3339).
-		BindError(); err != nil {
+	if err := ctx.Bind(params); err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
 		return err
 	}
@@ -62,7 +59,6 @@ func (t *TransactionHandler) History(ctx echo.Context) error {
 	}
 
 	res, err := t.serviceTransaction.History(ctx.Request().Context(), params.StartDatetime, params.EndDatetime)
-
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewResponse("", err.Error()))
 		return err

@@ -1,14 +1,15 @@
 package handler
 
 import (
-	"anylogibtc/repository/pg"
-	"anylogibtc/services/transaction"
 	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"anylogibtc/repository/pg"
+	"anylogibtc/services/transaction"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
@@ -34,7 +35,6 @@ func NewEchoServer(port int, db *pgxpool.Pool) *EchoServer {
 }
 
 func (s *EchoServer) SetupRoutes() {
-
 	transactionRepo := pg.NewPgTransaction(s.db)
 	transactionService := transaction.NewTransactionService(transactionRepo)
 	transactionHandler := NewTransactionHandler(transactionService)
@@ -43,7 +43,7 @@ func (s *EchoServer) SetupRoutes() {
 	// health check routes
 	g.GET("/healthz", Healthz)
 	g.POST("/wallets", transactionHandler.Save)
-	g.GET("/wallets", transactionHandler.History)
+	g.POST("/wallets/history", transactionHandler.History)
 }
 
 func (s *EchoServer) Run() {

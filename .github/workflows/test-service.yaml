@@ -19,7 +19,8 @@ jobs:
     # Docker Hub image that `container-job` executes in
     container: golang:latest
 
-    # Service containers to run with `container-job`
+    # # Service containers to run with `container-job`
+    # this is for integration testing purposes
     services:
       # Label used to access the service container
       postgres:
@@ -48,15 +49,19 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-
+      - name: Install PostgreSQL client
+        run: |
+          apt-get update
+          apt-get install --yes postgresql-client
+      - name: Migrate
+        run: psql -h postgres -d anylogi_test -U timescaledb a -f init.sql
+        env:
+          PGPASSWORD: secret
       # Performs a clean installation of all dependencies
       - name: Install dependencies
         run: make dep
 
-      - name: Run migration
-        run: soda migrate -e test
-
       - name: Run test
-        run: make test
+        run: make integration-test
         env:
-          POSTGRES_HOST: postgres
+          DATABASE_URL: postgres://timescaledb:secret@postgres:5432/anylogi_test?sslmode=disable
