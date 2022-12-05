@@ -54,7 +54,7 @@ jobs:
           apt-get update
           apt-get install --yes postgresql-client
       - name: Migrate
-        run: psql -h postgres -d anylogi_test -U timescaledb a -f init.sql'
+        run: psql -h postgres -d anylogi_test -U timescaledb a -f init.sql
         env:
           PGPASSWORD: secret
       # Performs a clean installation of all dependencies
