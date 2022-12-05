@@ -61,9 +61,6 @@ jobs:
       - name: Install dependencies
         run: make dep
 
-      - name: Run migration
-        run: soda migrate -e test
-
       - name: Run test
         run: make integration-test
         env:
